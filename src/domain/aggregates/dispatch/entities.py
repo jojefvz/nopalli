@@ -1,5 +1,5 @@
-from datetime import date, datetime
-from typing import Optional
+from datetime import datetime
+from typing import Literal, Optional, Union
 from uuid import UUID
 
 from ...common.entity import Entity
@@ -11,9 +11,8 @@ class Task(Entity):
             self,
             priority: int,
             instruction: Instruction,
-            loc_ref: Optional[UUID], 
-            appointment: Optional[Appointment],
-            container_num: Optional[str]
+            loc_ref: Union[UUID, Literal['TBD']] = 'TBD', 
+            appt: Optional[Appointment] = None
             ):
         super().__init__()
         self._status = TaskStatus.NOT_STARTED
@@ -22,8 +21,8 @@ class Task(Entity):
         self.location_ref = loc_ref
         self._check_in_datetime = None
         self._check_out_datetime = None
-        self.appointment = appointment
-        self.container_num = container_num
+        self.appointment = appt
+        self.container = None
         self.completed_by = None
 
     @property
@@ -33,6 +32,8 @@ class Task(Entity):
     def start(self) -> None:
         if self._status != TaskStatus.NOT_STARTED:
             raise ValueError('Only tasks not started can be started.')
+        if isinstance(self.location_ref, str):
+            raise ValueError('Cannot start a task without a location set.')
         
         self._status = TaskStatus.IN_PROGRESS
         self._check_in_datetime = datetime.now()
@@ -49,14 +50,15 @@ class Task(Entity):
         if self._status not in (TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS):
             raise ValueError('Only tasks not started or in progress can be marked stopoff.')
         
+        if self.instruction in (
+            Instruction.BOBTAIL_TO,
+            Instruction.FETCH_CHASSIS,
+            Instruction.TERMINATE_CHASSIS,
+            Instruction.STREET_TURN,
+        ):
+            raise ValueError('Task instruction is incompatible with being marked stop off.')
+        
         self._status = TaskStatus.STOP_OFF
-        self.completed_by = driver_ref
-        self._check_out_datetime = datetime.now()
-
-    def yardpull(self, driver_ref: UUID):
-        if self._status not in (TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS):
-            raise ValueError('Only tasks not started or in progress can be marked yardpull.')
-        self._status = TaskStatus.YARD_PULL
         self.completed_by = driver_ref
         self._check_out_datetime = datetime.now()
 
@@ -75,7 +77,7 @@ class Task(Entity):
             self.completed_by = None
             return
         
-        if self._status in (TaskStatus.STOP_OFF, TaskStatus.YARD_PULL):
+        if self._status == TaskStatus.STOP_OFF:
             self._status = TaskStatus.NOT_STARTED
             self._check_in_datetime = None
             self._check_out_datetime = None
@@ -85,13 +87,6 @@ class Task(Entity):
     def set_appointment(self, appointment: Appointment) -> None:
         if self.status != TaskStatus.NOT_STARTED:
             raise ValueError('Can only set an appointment on tasks not started.')
-        
-        if  appointment.appointment_date < date.today():
-            raise ValueError('Cannot set an appointment with a past date.')
-        
-        if appointment.start_time and appointment.end_time \
-            and appointment.end_time < appointment.start_time:
-            raise ValueError('Cannot set a start time that is later than the end time.')
         
         self.appointment = appointment
 
