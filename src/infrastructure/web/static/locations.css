@@ -1,0 +1,28 @@
+.container {
+    border: 2px solid black;
+}
+
+.container-subheading {
+    display: flex;
+    margin-top: 1em;
+}
+
+.container-subheading h2 {
+    flex: 1 80%;
+    margin: 0;
+    padding: .5em 1em;
+}
+
+.new-location-btn {
+    flex: 1;
+    font-weight: bold;
+    padding: .2em 1em;
+    margin-top: 0;
+    margin-right: 1em;
+    background-color: aliceblue;
+    color: black;
+}
+
+.location-container {
+    border: 2px solid black;
+}

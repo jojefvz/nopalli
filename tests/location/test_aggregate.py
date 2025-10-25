@@ -1,27 +1,59 @@
-from src.domain.aggregates.location.aggregate import Location, LocationStatus
+import pytest
+
+from src.domain.aggregates.location.aggregate import Location
+from src.domain.aggregates.location.value_objects import LocationStatus
 from src.domain.aggregates.location.value_objects import Address
 
 
 def test_location_init():
-    location = Location('BNSF LPC', Address('1234 Red St.', 'Elwood', 'Illinois', 11111))
+    address = Address('1234 Apple St.', 'Chicago', 'Illinois', 11111)
+    name = 'UP Global 4'
+
+    location = Location(name, address)
 
     assert location.id
-    assert location.name == 'BNSF LPC'
+    assert location.name == 'UP Global 4'
+    assert location.status == LocationStatus.ACTIVE
+    assert location.address == Address('1234 Apple St.', 'Chicago', 'Illinois', 11111)
+
+
+def test_deactivating_location():
+    address = Address('1234 Apple St.', 'Chicago', 'Illinois', 11111)
+    name = 'UP Global 4'
+    location = Location(name, address)
+
+    location.deactivate()
+
+    assert location.status == LocationStatus.INACTIVE
+
+
+def test_deactivating_deactivated_location():
+    address = Address('1234 Apple St.', 'Chicago', 'Illinois', 11111)
+    name = 'UP Global 4'
+    location = Location(name, address)
+    location.deactivate()
+
+    match = 'Only active locations can be deactivated.'
+    with pytest.raises(ValueError, match=match):
+        location.deactivate()
+
+
+def test_reactivating_location():
+    address = Address('1234 Apple St.', 'Chicago', 'Illinois', 11111)
+    name = 'UP Global 4'
+    location = Location(name, address)
+    location.deactivate()
+
+    location.reactivate()
+
     assert location.status == LocationStatus.ACTIVE
 
-def test_updating_location_address(fake_location):
-    fake_location.update_address('5678 Green St.', 'Elwood', 'Illinois', 22222)
 
-    assert fake_location
-    assert fake_location.name == 'BNSF LPC'
-    assert fake_location.address == Address('5678 Green St.', 'Elwood', 'Illinois', 22222)
+def test_reactivating_active_location():
+    address = Address('1234 Apple St.', 'Chicago', 'Illinois', 11111)
+    name = 'UP Global 4'
+    location = Location(name, address)
 
-def test_deactivating_location(fake_location):
-    fake_location.deactivate()
-
-    assert fake_location.status == LocationStatus.INACTIVE
-
-def test_reactivating_location(fake_location):
-    fake_location.reactivate()
-
-    assert fake_location.status == LocationStatus.ACTIVE
+    match = 'Only deactivated locations can be reactivated.'
+    with pytest.raises(ValueError, match=match):
+        location.reactivate()

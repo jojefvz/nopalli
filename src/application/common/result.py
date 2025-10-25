@@ -5,8 +5,10 @@ These types provide a consistent way to handle success and failure cases across 
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, Self
+from typing import Any, Optional, Generic, TypeVar, Self
 
+
+T = TypeVar('T')
 
 class ErrorCode(Enum):
     """Enumeration of possible error codes in the application layer."""
@@ -41,7 +43,7 @@ class Error:
         """Create a NOT_FOUND error for a specific entity."""
         return cls(
             code=ErrorCode.NOT_FOUND,
-            message=f"{entity} with id {entity_id} not found",
+            message=f"{entity} with id {entity_id} not found"
         )
 
     @classmethod
@@ -56,7 +58,7 @@ class Error:
 
 
 @dataclass(frozen=True)
-class Result:
+class Result(Generic[T]):
     """
     Represents the outcome of a use case execution, either success or failure.
 

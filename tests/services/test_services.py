@@ -1,5 +1,4 @@
 from datetime import date, time
-from hmac import new
 from uuid import uuid4
 
 import pytest
@@ -10,10 +9,13 @@ from src.domain.aggregates.dispatch.entities import Task
 from src.domain.aggregates.dispatch.value_objects import Appointment, AppointmentType, DispatchStatus, Instruction
 from src.domain.aggregates.driver.aggregate import Driver
 from src.domain.aggregates.driver.value_objects import DriverStatus
+from src.domain.aggregates.location.aggregate import Location
 from src.domain.aggregates.location.value_objects import Address
 from src.domain.services import Dispatcher
-from tests import dispatch, driver
 
+
+def create_minimal_task() -> list[Task]:
+    return 
 
 def create_minimal_dispatch() -> Dispatch:
     """
@@ -27,7 +29,7 @@ def create_minimal_dispatch() -> Dispatch:
         Task(2, Instruction.LIVE_LOAD, uuid4())
         ]
     
-    return Dispatcher.create_dispatch(broker.id, containers, plan)
+    return Dispatcher.create_dispatch(broker, containers, plan)
 
 
 def create_dispatch_ready_to_start() -> Dispatch:
@@ -79,18 +81,45 @@ def create_cancelled_dispatch() -> Dispatch:
 # ---------------------------------------- TESTING DISPATCH UNDER DRAFT STATUS ----------------------------------------
 
 
+def test_create_minimal_task():
+    priority = 1
+    instruction = Instruction.PICKUP_EMPTY
+    location = 'TBD'
+    appt = None
+
+    task = Dispatcher.create_task(priority, instruction, location, appt)
+    
+    assert task
+    assert task.location_ref == 'TBD'
+    assert not task.appointment
+
+
+def test_create_task_with_deactivated_location():
+    priority = 1
+    instruction = Instruction.PICKUP_EMPTY
+    location = Location('UP G4', Address('First St.', 'Chicago', 'IL', 00000))
+    location.deactivate()
+    appt = None
+
+    match = 'Cannot set a deactivated location on a new task.'
+    with pytest.raises(ValueError, match=match):
+        Dispatcher.create_task(priority, instruction, location, appt)
+    
+
 def test_create_minimal_dispatch():
     broker = Broker("Cornerstone", Address('First St.', 'Chicago', 'IL', 00000))
     containers = ['CMAU123456']
-    plan = [
-        Task(1, Instruction.PICKUP_EMPTY),
-        Task(2, Instruction.LIVE_LOAD)
+    plan_details = [
+        [1, Instruction.PICKUP_EMPTY, 'TBD', None],
+        [2, Instruction.LIVE_LOAD, 'TBD', None],
     ]
+    plan = [Dispatcher.create_task(*task_details) for task_details in plan_details]
 
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
     
     assert dispatch.id
     assert dispatch.status == DispatchStatus.DRAFT
+    assert dispatch.broker_ref
     assert dispatch.plan
     assert dispatch.containers
     assert dispatch.driver_ref is None
@@ -99,23 +128,40 @@ def test_create_minimal_dispatch():
 def test_creating_dispatch_with_one_task():
     broker = Broker("Cornerstone", Address('First St.', 'Chicago', 'IL', 00000))
     containers = ['CMAU123456']
-    plan = [Task(1, Instruction.PICKUP_EMPTY)]
+    plan_details = [[1, Instruction.PICKUP_EMPTY, 'TBD', None]]
+    plan = [Dispatcher.create_task(*task_details) for task_details in plan_details]
 
     match = 'A new dispatch plan requires at least two tasks.'
     with pytest.raises(ValueError, match=match):
-        Dispatcher.create_dispatch(broker.id, containers, plan)
+        Dispatcher.create_dispatch(broker, containers, plan)
     
 
 def test_creating_dispatch_without_a_container():
     broker = Broker("Cornerstone", Address('First St.', 'Chicago', 'IL', 00000))
-    plan = [
-        Task(1, Instruction.PICKUP_EMPTY),
-        Task(2, Instruction.LIVE_LOAD)
-        ]
+    plan_details = [
+        [1, Instruction.PICKUP_EMPTY, 'TBD', None],
+        [2, Instruction.LIVE_LOAD, 'TBD', None],
+    ]
+    plan = [Dispatcher.create_task(*task_details) for task_details in plan_details]
     
     match = 'A new dispatch requires at least one container.'
     with pytest.raises(ValueError, match=match):
-        Dispatcher.create_dispatch(broker.id, [], plan)
+        Dispatcher.create_dispatch(broker, [], plan)
+
+
+def test_creating_dispatch_with_a_deactivated_broker():
+    broker = Broker("Cornerstone", Address('First St.', 'Chicago', 'IL', 00000))
+    broker.deactivate()
+    containers = ['CMAU123456']
+    plan_details = [
+        [1, Instruction.PICKUP_EMPTY, 'TBD', None],
+        [2, Instruction.LIVE_LOAD, 'TBD', None],
+    ]
+    plan = [Dispatcher.create_task(*task_details) for task_details in plan_details]
+    
+    match = 'Cannot set a deactivated broker on a dispatch.'
+    with pytest.raises(ValueError, match=match):
+        Dispatcher.create_dispatch(broker, containers, plan)
 
 
 def test_new_dispatch_with_one_container_gets_assigned_to_tasks():
@@ -127,7 +173,7 @@ def test_new_dispatch_with_one_container_gets_assigned_to_tasks():
         Task(3, Instruction.INGATE),
         ]
     
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
 
     for task in dispatch.plan:
         assert task.container
@@ -144,7 +190,7 @@ def test_new_dispatch_does_not_assign_container_to_tasks_that_do_not_require_con
         Task(5, Instruction.TERMINATE_CHASSIS)
         ]
     
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
 
     for task in dispatch.plan:
         if task.instruction == Instruction.FETCH_CHASSIS:
@@ -162,7 +208,7 @@ def test_new_dispatch_with_two_containers_do_not_get_assigned_to_tasks():
         Task(3, Instruction.INGATE),
         ]
     
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
 
     for task in dispatch.plan:
         assert not task.container
@@ -178,7 +224,7 @@ def test_assigning_draft_dispatch_containers_to_tasks():
         Task(4, Instruction.PICKUP_LOADED),
         Task(5, Instruction.INGATE),
         ]
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
 
     Dispatcher.assign_container_to_tasks(dispatch, 'CMAU123456', [1, 2, 3])
     Dispatcher.assign_container_to_tasks(dispatch, 'UMXU123456', [4, 5])
@@ -199,7 +245,7 @@ def test_cannot_assign_container_that_is_not_in_draft_dispatch_to_tasks():
         Task(4, Instruction.PICKUP_LOADED),
         Task(5, Instruction.INGATE),
         ]
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
 
     match = 'Container number is not in dispatch cannot be assigned to tasks.'
     with pytest.raises(ValueError, match=match):
@@ -217,7 +263,7 @@ def test_cannot_assign_draft_dispatch_container_to_task_that_does_not_require_co
         Task(5, Instruction.PICKUP_LOADED),
         Task(6, Instruction.INGATE),
         ]
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
 
     match = 'Invalid assignment of container to task that does not require a container.'
     with pytest.raises(ValueError, match=match):

@@ -11,14 +11,17 @@ class Broker(AggregateRoot):
         self.address = address
 
     @property
-    def status(self) -> None:
+    def status(self) -> BrokerStatus:
         return self._status
-    
-    def update_address(self, street_address, city, state, zipcode):
-        self.address = Address(street_address, city, state, zipcode)
 
-    def deactivate(self):
+    def deactivate(self) -> None:
+        if self._status == BrokerStatus.INACTIVE:
+            raise ValueError('Only active brokers can be deactivated.')
+        
         self._status = BrokerStatus.INACTIVE
 
-    def reactivate(self):
+    def reactivate(self) -> None:
+        if self._status == BrokerStatus.ACTIVE:
+            raise ValueError('Only deactivated brokers can be reactivated.')
+        
         self._status = BrokerStatus.ACTIVE

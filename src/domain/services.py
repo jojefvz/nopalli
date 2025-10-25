@@ -1,22 +1,41 @@
-from token import OP
-from typing import Optional
-from uuid import UUID
+from typing import Literal, Optional, Union
 
+from src.domain.aggregates.broker.aggregate import Broker
+from src.domain.aggregates.broker.value_objects import BrokerStatus
 from src.domain.aggregates.dispatch.aggregate import Dispatch
 from src.domain.aggregates.dispatch.entities import Task
-from src.domain.aggregates.dispatch.value_objects import Container, DispatchStatus, Instruction
+from src.domain.aggregates.dispatch.value_objects import Appointment, Container, DispatchStatus, Instruction
 from src.domain.aggregates.driver.aggregate import Driver
 from src.domain.aggregates.driver.value_objects import DriverStatus
+from src.domain.aggregates.location.aggregate import Location
+from src.domain.aggregates.location.value_objects import LocationStatus
+
 
 
 class Dispatcher:
     @staticmethod
+    def create_task(
+        priority: int,
+        instruction: Instruction,
+        location: Union[Location, Literal['TBD']],
+        appointment: Optional[Appointment],
+        ) -> Task:
+        if isinstance(location, Location) and location.status == LocationStatus.INACTIVE:
+            raise ValueError('Cannot set a deactivated location on a new task.')
+        
+        location_ref = location.id if isinstance(location, Location) else 'TBD'
+
+        return Task(priority, instruction, location_ref, appointment)
+    
+    @staticmethod
     def create_dispatch(
-        broker_ref: UUID,
+        broker: Broker,
         containers: list[Container],
         plan: list[Task],
         driver_ref: Optional[Driver] = None
         ) -> Dispatch:
+        if broker.status == BrokerStatus.INACTIVE:
+            raise ValueError('Cannot set a deactivated broker on a dispatch.')
         if len(containers) < 1:
             raise ValueError("A new dispatch requires at least one container.")
         if len(plan) < 2:
@@ -32,7 +51,7 @@ class Dispatcher:
                     continue
                 task.container = containers[0]
         
-        return Dispatch(broker_ref, containers, plan, driver_ref)
+        return Dispatch(broker.id, containers, plan, driver_ref)
     
     @staticmethod
     def assign_container_to_tasks(dispatch: Dispatch, container: str, task_priorities: list[int]):

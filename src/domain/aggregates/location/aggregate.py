@@ -1,5 +1,7 @@
-from src.domain.common.entity import AggregateRoot
 from .value_objects import Address, LocationStatus
+from ...common.entity import AggregateRoot
+from ...exceptions import BusinessRuleViolation
+
 
 
 class Location(AggregateRoot):
@@ -13,11 +15,14 @@ class Location(AggregateRoot):
     def status(self) -> LocationStatus:
         return self._status
     
-    def update_address(self, street_address, city, state, zipcode) -> None:
-        self.address = Address(street_address, city, state, zipcode)
-    
-    def deactivate(self):
+    def deactivate(self) -> None:
+        if self._status == LocationStatus.INACTIVE:
+            raise BusinessRuleViolation('Only active locations can be deactivated.')
+        
         self._status = LocationStatus.INACTIVE
 
-    def reactivate(self):
+    def reactivate(self) -> None:
+        if self._status == LocationStatus.ACTIVE:
+            raise BusinessRuleViolation('Only deactivated locations can be reactivated.')
+        
         self._status = LocationStatus.ACTIVE

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block main_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='locations.css') }}">
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="container-subheading">
+      <h2>Locations</h2>
+      <button class="new-location-btn">New Location</button>
+    </div>
+    <div class="locations-list-container">
+      {% for location in locations %}
+        {% include '_location.html' %}
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

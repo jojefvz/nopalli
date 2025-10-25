@@ -78,7 +78,7 @@ def create_two_container_dispatch(plan) -> Dispatch:
     """
     broker = Broker("Cornerstone", Address('First St.', 'Chicago', 'IL', 00000))
     containers = ['CMAU123456', 'UMXU123456']
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
     dispatch.set_appointment(2, Appointment(AppointmentType.EXACT_TIME, date(2025, 1, 1), time(9)))
     driver = Driver('John')
     Dispatcher.assign_driver(dispatch, driver)
@@ -153,7 +153,7 @@ def create_two_container_dispatch() -> Dispatch:
         Task(4, Instruction.PICKUP_LOADED),
         Task(5, Instruction.INGATE),
         ]
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
     dispatch.set_appointment(2, Appointment(AppointmentType.EXACT_TIME, date(2025, 1, 1), time(9)))
     driver = Driver('John')
     Dispatcher.assign_driver(dispatch, driver)
@@ -170,7 +170,7 @@ def create_dispatch(plan) -> Dispatch:
     """
     broker = Broker("Cornerstone", Address('First St.', 'Chicago', 'IL', 00000))
     containers = ['CMAU123456']
-    dispatch = Dispatcher.create_dispatch(broker.id, containers, plan)
+    dispatch = Dispatcher.create_dispatch(broker, containers, plan)
     dispatch.set_appointment(2, Appointment(AppointmentType.EXACT_TIME, date(2025, 1, 1), time(9)))
     driver = Driver('John')
     Dispatcher.assign_driver(dispatch, driver)

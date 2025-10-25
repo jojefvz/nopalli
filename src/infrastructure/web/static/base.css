@@ -1,0 +1,42 @@
+:root {
+    box-sizing: border-box;
+}
+
+*,
+::before,
+::after {
+    box-sizing: inherit;
+}
+
+body {
+    font-family: Tahoma;
+}
+
+body * + * {
+    margin-top: 1.5em;
+}
+
+.site-nav {
+    display: flex;
+    margin: 0;
+    padding: .5em;
+    background-color: aliceblue;
+    border: 2px solid darkblue;
+    list-style-type: none;
+}
+
+.site-nav > li {
+    margin-top: 0;
+}
+
+.site-nav > li > a {
+    display: block;
+    padding: .5em 1em;
+    background-color: darkblue;
+    color: whitesmoke;
+    text-decoration: none;
+}
+
+.site-nav > li + li {
+    margin-left: 1em;
+}
