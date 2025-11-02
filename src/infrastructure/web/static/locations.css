@@ -26,3 +26,58 @@
 .location-container {
     border: 2px solid black;
 }
+
+.modal {
+    display: none;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, .5);
+}
+
+.modal-body {
+    position: fixed;
+    top: 3em;
+    bottom: 3em;
+    right: 20%;
+    left: 20%;
+    padding: 2em 3em;
+    background-color: white;
+    overflow: auto;
+}
+
+.modal-close {
+    position: absolute;
+    top: .3em;
+    right: .3em;
+    padding: .3em;
+    background-color: white;
+    cursor: pointer;
+    font-size: 2em;
+    height: 1em;
+    width: 1em;
+    text-indent: 10em;
+    overflow: hidden;
+    border: 0;
+}
+
+.modal-close::after {
+    position: absolute;
+    line-height: .5;
+    top: .2em;
+    left: .1em;
+    text-indent: 0;
+    content: "\00D7";
+}
+
+.modal-submit {
+    padding: .5em 1em;
+    border: 0;
+    background-color: darkblue;
+    color: white;
+}

@@ -40,7 +40,7 @@ class InMemoryLocationRepository(LocationRepository):
         Args:
             location: The location to save
         """
-        logger.debug(f"Saving location {location.id} for location {location.location_id}")
+        logger.debug(f"Saving location {location.id}")
         self._locations[location.id] = location
 
     def delete(self, location_id: UUID) -> None:

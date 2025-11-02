@@ -9,7 +9,6 @@ from ..location import bp
 @bp.route("/locations", methods=['GET', 'POST'])
 def list_locations():
     """List all locations."""
-    print('HIIIII')
     app = current_app.config["APP_CONTAINER"]
 
     result = app.location_controller.handle_list()
@@ -40,13 +39,13 @@ def new_location():
         )
 
         if not result.is_success:
-            error = location_presenter.present_error(result.error.message)
+            error = app.location_presenter.present_error(result.error.message)
             flash(error.message, "error")
-            return redirect(url_for("todo.index"))
+            return redirect(url_for("location.new_location"))
 
         # Use view model directly from controller response
         location = result.success
-        flash(f'Project "{location.name}" created successfully', "success")
-        return redirect(url_for("todo.index"))
+        flash(f'Location "{location.name}" created successfully', "success")
+        return redirect(url_for("location.list_locations"))
 
     return render_template("locations.html")

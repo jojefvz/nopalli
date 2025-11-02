@@ -1,4 +1,21 @@
 
 <div class="location-container">
-  some location
+  <h3>{{ location.name }} ({{ location.status }})</h3>
+  <p>
+    {{ location.street_address }}<br>
+    {{ location.city }}, {{ location.state }} {{ location.zipcode }}
+  </p>
+  <button id="activation-btn">Deactivate</button>
+  <script>
+    let activationButtonElement = document.getElementById('activation-btn')
+
+    activationButtonElement.addEventListener('click', function(event) {
+      if (activationButtonElement.innerHTML === 'Deactivate') {
+        activationButtonElement.innerHTML = 'Activate'
+      } else {
+        activationButtonElement.innerHTML = 'Deactivate'
+      }
+      
+    })
+  </script>
 </div>

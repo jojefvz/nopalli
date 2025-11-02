@@ -70,7 +70,7 @@ class LocationResponse:
         return cls(
             id=str(location.id),
             name=location.name,
-            status=location.status,
+            status=location.status.value,
             street_address=location.address.street_address,
             city=location.address.city,
             state=location.address.state,
