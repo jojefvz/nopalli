@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block main_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='brokers/brokers.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='brokers/_broker.css') }}">
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="container-subheading">
+      <h2>Brokers</h2>
+      <button class="modal-open" href="#new-broker-modal">New Broker</button>
+    </div>
+
+    <div class="brokers-list-container">
+      {% for broker in brokers %}
+        {% include 'brokers/_broker.html' %}
+      {% endfor %}
+    </div>
+
+    <div class="modal" id="new-broker-modal">
+      <div class="modal-backdrop"></div>
+      <div class="modal-body">
+        <button class="modal-close" href="#new-broker-modal">close</button>
+        <h2>Add New Broker</h2>
+        <form action="{{ url_for('broker.new_broker') }}" method="post">
+          <p>
+            <label for="name">Broker Name</label>
+            <input type="text" id="name" name="name" required>
+          </p>
+          <p>
+            <label for="street_address">Street Address</label>
+            <input type="text" id="street_address" name="street_address" required>
+          </p>
+          <p>
+            <label for="city">City</label>
+            <input type="text" id="city" name="city" required>
+          </p>
+          <p>
+            <label for="state">State</label>
+            <input type="text" id="state" name="state" required>
+          </p>
+          <p>
+            <label for="zipcode">Zipcode</label>
+            <input type="text" id="zipcode" name="zipcode" required>
+          </p>
+          <p><button type="submit" class="modal-submit">Submit</button></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    let open_btns = document.querySelectorAll('button.modal-open');
+    let close_btns = document.querySelectorAll('button.modal-close');
+
+    for (let i = 0; i < open_btns.length; i++) {
+        open_btns[i].onclick = function (event) {
+          event.preventDefault();
+          modal = document.querySelector(event.target.getAttribute("href"));
+          modal.style.display = 'block';
+        };
+    }
+    
+    for (let i = 0; i < close_btns.length; i++) {
+        close_btns[i].onclick = function (event) {
+          event.preventDefault();
+          modal = document.querySelector(event.target.getAttribute("href"));
+          modal.style.display = 'none';
+        };
+    }
+  </script>
+{% endblock %}

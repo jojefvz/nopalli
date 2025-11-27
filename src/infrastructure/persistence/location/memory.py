@@ -4,7 +4,6 @@ from logging import getLogger
 
 from ....application.repositories.location_repository import LocationRepository
 from ....domain.aggregates.location.aggregate import Location
-from ....domain.aggregates.location.value_objects import LocationStatus
 from ....domain.exceptions import LocationNotFoundError
 
 logger = getLogger(__name__)

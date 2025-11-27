@@ -1,20 +1,27 @@
 {% extends "base.html" %}
 
 {% block main_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='locations.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='locations/locations.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='locations/_location.css') }}">
 {% endblock %}
 
 {% block content %}
   <div class="container">
     <div class="container-subheading">
       <h2>Locations</h2>
-      <button class="new-location-btn" id="open">New Location</button>
+      <button class="modal-open" href="#new-location-modal">New Location</button>
     </div>
 
-    <div class="modal" id="modal">
+    <div class="locations-list-container">
+      {% for location in locations %}
+        {% include 'locations/_location.html' %}
+      {% endfor %}
+    </div>
+
+    <div class="modal" id="new-location-modal">
       <div class="modal-backdrop"></div>
       <div class="modal-body">
-        <button class="modal-close" id="close">close</button>
+        <button class="modal-close" href="#new-location-modal">close</button>
         <h2>Add New Location</h2>
         <form action="{{ url_for('location.new_location') }}" method="post">
           <p>
@@ -41,27 +48,26 @@
         </form>
       </div>
     </div>
-
-    <div class="locations-list-container">
-      {% for location in locations %}
-        {% include '_location.html' %}
-      {% endfor %}
-    </div>
   </div>
 
   <script type="text/javascript">
-    var button = document.getElementById('open');
-    var close = document.getElementById('close');
-    var modal = document.getElementById('modal');
+    let open_btns = document.querySelectorAll('button.modal-open');
+    let close_btns = document.querySelectorAll('button.modal-close');
 
-    button.addEventListener('click', function (event) {
-      event.preventDefault();
-      modal.style.display = 'block';
-    });
-
-    close.addEventListener('click', function (event) {
-      event.preventDefault();
-      modal.style.display = 'none';
-    });
-</script>
+    for (let i = 0; i < open_btns.length; i++) {
+        open_btns[i].onclick = function (event) {
+          event.preventDefault();
+          modal = document.querySelector(event.target.getAttribute("href"));
+          modal.style.display = 'block';
+        };
+    }
+    
+    for (let i = 0; i < close_btns.length; i++) {
+        close_btns[i].onclick = function (event) {
+          event.preventDefault();
+          modal = document.querySelector(event.target.getAttribute("href"));
+          modal.style.display = 'none';
+        };
+    }
+  </script>
 {% endblock %}

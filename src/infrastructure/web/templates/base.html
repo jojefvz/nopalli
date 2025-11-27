@@ -12,7 +12,19 @@
     <h1>Nopalli</h1>
     <nav>
       <ul class="site-nav">
-        <li><a href="">Dispatching</a></li>
+        <li><a href="{{ url_for('home.home') }}">Home</a></li>
+        <li class="dropdown">
+          <div class="dropdown-label">Dispatch</div>
+          <div class="dropdown-menu">
+            <ul class="submenu">
+              <li><a href="">Dispatches</a></li>
+              <li><a href="">Loadboard</a></li>
+              <li><a href="">Drivers</a></li>
+              <li><a href="{{ url_for('broker.list_brokers') }}">Brokers</a></li>
+              <li><a href="{{ url_for('location.list_locations') }}">Locations</a></li>
+            </ul>
+          </div>
+        </li>
         <li><a href="">Invoicing</a></li>
         <li><a href="">Reports</a></li>
         <li><a href="">Admin</a></li>

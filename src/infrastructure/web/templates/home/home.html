@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block main_css%}{% endblock %}
+
+{% block content %}
+<h2 id="full-date"></h2>
+<script>
+  const options = {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+  };
+
+  document.getElementById('full-date').textContent =
+    new Date().toLocaleDateString(undefined, options);
+</script>
+{% endblock %}

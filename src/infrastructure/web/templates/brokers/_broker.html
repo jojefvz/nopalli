@@ -1,0 +1,80 @@
+<div class="broker-container">
+  <div class="broker-details">
+    <h3>{{ broker.name }} ({{ broker.status }})</h3>
+    <div class="broker-address">
+      {{ broker.street_address }}<br>
+      {{ broker.city }}, {{ broker.state }} {{ broker.zipcode }}
+    </div>
+    <button class="modal-open edit" href="#edit-broker-{{ broker.id }}-modal">Edit</button>
+  </div>
+
+  {% if broker.status == 'ACTIVE' %}
+  <button class="modal-open" href="#activation-{{ broker.id }}-modal">Deactivate</button>
+  {% else%}
+  <button class="modal-open" href="#activation-{{ broker.id }}-modal">Activate</button>
+  {% endif %}
+
+  <div class="modal" id="edit-broker-{{ broker.id }}-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-body">
+      <button class="modal-close" href="#edit-broker-{{ broker.id }}-modal">close</button>
+      <h2>Edit Broker</h2>
+      <form action="{{ url_for('broker.edit_broker') }}" method="post">
+        <input type="hidden" name="id" value="{{ broker.id }}">
+        <p>
+          <label for="name">Broker Name</label>
+          <input type="text" id="name" name="name" value="{{ broker.name }}" required>
+        </p>
+        <p>
+          <label for="street_address">Street Address</label>
+          <input type="text" id="street_address" name="street_address" value="{{ broker.street_address }}" required>
+        </p>
+        <p>
+          <label for="city">City</label>
+          <input type="text" id="city" name="city" value="{{ broker.city }}" required>
+        </p>
+        <p>
+          <label for="state">State</label>
+          <input type="text" id="state" name="state" value="{{ broker.state }}" required>
+        </p>
+        <p>
+          <label for="zipcode">Zipcode</label>
+          <input type="text" id="zipcode" name="zipcode" value="{{ broker.zipcode }}" required>
+        </p>
+        <p><button type="submit" class="modal-submit">Submit</button></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="activation-{{ broker.id }}-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-body">
+      <button class="modal-close" href="#activation-{{ broker.id }}-modal">close</button>
+      {% if broker.status == 'ACTIVE' %}
+      <h2>Deactivating Broker: {{ broker.name }}</h2>
+      <form action="{{ url_for('broker.deactivate') }}" method="post">
+        <p>
+          Are you sure you would like to deactivate this broker?
+          This broker will no longer be available for broker selection. Broker can be activated again, if needed.
+        </p>
+        <input type="hidden" name="id" value="{{ broker.id }}">
+        <p>
+          <button type="submit" class="modal-submit">Deactivate</button>
+        </p>
+      </form>
+      {% else %}
+      <h2>Activating Broker: {{ broker.name }}</h2>
+      <form action="{{ url_for('broker.activate') }}" method="post">
+        <p>
+          Are you sure you would like to activate this broker?
+          This broker will become available for broker selection.
+        </p>
+        <input type="hidden" name="id" value="{{ broker.id }}">
+        <p>
+          <button type="submit" class="modal-submit">Activate</button>
+        </p>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>

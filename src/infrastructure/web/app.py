@@ -10,8 +10,13 @@ def create_web_app(app_container: Application) -> Flask:
     flask_app.config["APP_CONTAINER"] = app_container  # Store container in config
 
     # Register blueprints
-    from .location import bp as location_bp
+    from .routes.home import bp as home_bp
+    flask_app.register_blueprint(home_bp)
 
+    from .routes.broker import bp as broker_bp
+    flask_app.register_blueprint(broker_bp)
+
+    from .routes.location import bp as location_bp
     flask_app.register_blueprint(location_bp)
 
     return flask_app

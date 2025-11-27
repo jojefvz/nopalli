@@ -2,14 +2,15 @@ from dataclasses import dataclass
 from typing import Self
 from uuid import UUID
 
-from ...domain.aggregates.location.aggregate import Location
-from ...domain.aggregates.location.value_objects import Address, LocationStatus
+from ...domain.aggregates.broker.aggregate import Broker
+from ...domain.aggregates.broker.value_objects import BrokerStatus
+from ...domain.aggregates.location.value_objects import Address
 from ...domain.exceptions import ValidationError
 
 
 @dataclass(frozen=True)
-class CreateLocationRequest:
-    """Request data for creating a new location."""
+class CreateBrokerRequest:
+    """Request data for creating a new broker."""
 
     name: str
     street_address: str
@@ -20,9 +21,9 @@ class CreateLocationRequest:
     def __post_init__(self) -> None:
         """Validate request data"""
         if not self.name.strip():
-            raise ValidationError("Location name is required")
+            raise ValidationError("Broker name is required")
         if len(self.name) > 100:
-            raise ValidationError("Location name cannot exceed 100 characters")
+            raise ValidationError("Broker name cannot exceed 100 characters")
         if not self.street_address.strip():
             raise ValidationError("Street address is required")
         if len(self.street_address) > 100:
@@ -54,15 +55,15 @@ class CreateLocationRequest:
 
 
 @dataclass(frozen=True)
-class DeactivateLocationRequest:
-    """Deactivate a location."""
+class DeactivateBrokerRequest:
+    """Deactivate a broker."""
 
     id: str
 
     def __post_init__(self) -> None:
         """Validate request data"""
         if not UUID(self.id, version=4):
-            raise ValidationError('Location id is not of uuid4 format.')
+            raise ValidationError('Broker id is not of uuid4 format.')
 
     def to_execution_params(self) -> dict:
         """Convert request data to use case parameters."""
@@ -72,15 +73,15 @@ class DeactivateLocationRequest:
     
 
 @dataclass(frozen=True)
-class ActivateLocationRequest:
-    """Deactivate a location."""
+class ActivateBrokerRequest:
+    """Deactivate a broker."""
 
     id: str
 
     def __post_init__(self) -> None:
         """Validate request data"""
         if not UUID(self.id, version=4):
-            raise ValidationError('Location id is not of uuid4 format.')
+            raise ValidationError('Broker id is not of uuid4 format.')
 
     def to_execution_params(self) -> dict:
         """Convert request data to use case parameters."""
@@ -90,8 +91,8 @@ class ActivateLocationRequest:
     
 
 @dataclass(frozen=True)
-class EditLocationRequest:
-    """Request data for creating a new location."""
+class EditBrokerRequest:
+    """Request data for creating a new broker."""
     id: str
     name: str
     street_address: str
@@ -102,11 +103,11 @@ class EditLocationRequest:
     def __post_init__(self) -> None:
         """Validate request data"""
         if not UUID(self.id, version=4):
-            raise ValidationError('Location id is not of uuid4 format.')
+            raise ValidationError('Broker id is not of uuid4 format.')
         if not self.name.strip():
-            raise ValidationError("Location name is required")
+            raise ValidationError("Broker name is required")
         if len(self.name) > 100:
-            raise ValidationError("Location name cannot exceed 100 characters")
+            raise ValidationError("Broker name cannot exceed 100 characters")
         if not self.street_address.strip():
             raise ValidationError("Street address is required")
         if len(self.street_address) > 100:
@@ -139,26 +140,26 @@ class EditLocationRequest:
     
 
 @dataclass(frozen=True)
-class LocationResponse:
-    """Response data for basic location operations."""
+class BrokerResponse:
+    """Response data for basic broker operations."""
 
     id: str
     name: str
-    status: LocationStatus
+    status: BrokerStatus
     street_address: str
     city: str
     state: str
     zipcode: str
 
     @classmethod
-    def from_entity(cls, location: Location) -> Self:
-        """Create response from a Location entity."""
+    def from_entity(cls, broker: Broker) -> Self:
+        """Create response from a Broker entity."""
         return cls(
-            id=str(location.id),
-            name=location.name,
-            status=location.status.value,
-            street_address=location.address.street_address,
-            city=location.address.city,
-            state=location.address.state,
-            zipcode=str(location.address.zipcode),
+            id=str(broker.id),
+            name=broker.name,
+            status=broker.status.value,
+            street_address=broker.address.street_address,
+            city=broker.address.city,
+            state=broker.address.state,
+            zipcode=str(broker.address.zipcode),
         )

@@ -12,6 +12,14 @@ class DomainError(Exception):
     pass
 
 
+class BrokerNotFoundError(DomainError):
+    """Raised when attempting to access a task that doesn't exist."""
+
+    def __init__(self, broker_id: UUID) -> None:
+        self.broker_id = broker_id
+        super().__init__(f"Broker with id {broker_id} not found")
+
+
 class LocationNotFoundError(DomainError):
     """Raised when attempting to access a task that doesn't exist."""
 

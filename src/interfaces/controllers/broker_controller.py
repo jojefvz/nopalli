@@ -16,32 +16,29 @@ Key Clean Architecture benefits demonstrated in these controllers:
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
-from src.infrastructure.web.routes.location.routes import deactivate
-
-from ...interfaces.presenters.location_presenter import LocationPresenter
-from ...interfaces.view_models.location_vm import LocationViewModel
+from ...interfaces.presenters.broker_presenter import BrokerPresenter
+from ...interfaces.view_models.broker_vm import BrokerViewModel
 from ...interfaces.view_models.base import OperationResult
-from ...application.dtos.location_dtos import (
-    CreateLocationRequest,
-    DeactivateLocationRequest,
-    ActivateLocationRequest,
-    EditLocationRequest
+from ...application.dtos.broker_dtos import (
+    CreateBrokerRequest,
+    DeactivateBrokerRequest,
+    ActivateBrokerRequest,
+    EditBrokerRequest
     )
-from ...application.use_cases.location_use_cases import (
-    ListLocationsUseCase,
-    CreateLocationUseCase,
-    DeactivateLocationUseCase,
-    ActivateLocationUseCase,
-    EditLocationUseCase
+from ...application.use_cases.broker_use_cases import (
+    ListBrokersUseCase,
+    CreateBrokerUseCase,
+    DeactivateBrokerUseCase,
+    ActivateBrokerUseCase,
+    EditBrokerUseCase
 )
 
 
 @dataclass
-class LocationController:
+class BrokerController:
     """
-    Controller for location-related operations, demonstrating Clean Architecture principles.
+    Controller for broker-related operations, demonstrating Clean Architecture principles.
 
     This controller adheres to Clean Architecture by:
     - Depending only on abstractions (use cases and presenters)
@@ -55,22 +52,22 @@ class LocationController:
     - Modification of presentation logic without affecting core functionality
 
     Attributes:
-        create_use_case: Use case for creating locations
-        presenter: Handles formatting of location data for the interface
+        create_use_case: Use case for creating brokers
+        presenter: Handles formatting of broker data for the interface
     """
 
-    list_use_case: ListLocationsUseCase
-    create_use_case: CreateLocationUseCase
-    deactivate_use_case: DeactivateLocationUseCase
-    activate_use_case: ActivateLocationUseCase
-    edit_use_case: EditLocationUseCase
-    presenter: LocationPresenter
+    list_use_case: ListBrokersUseCase
+    create_use_case: CreateBrokerUseCase
+    deactivate_use_case: DeactivateBrokerUseCase
+    activate_use_case: ActivateBrokerUseCase
+    edit_use_case: EditBrokerUseCase
+    presenter: BrokerPresenter
 
-    def handle_list(self) -> OperationResult[list[LocationViewModel]]:
+    def handle_list(self) -> OperationResult[list[BrokerViewModel]]:
         result = self.list_use_case.execute()
 
         if result.is_success:
-            view_models = [self.presenter.present_location(proj) for proj in result.value]
+            view_models = [self.presenter.present_broker(proj) for proj in result.value]
             return OperationResult.succeed(view_models)
 
         error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
@@ -83,9 +80,9 @@ class LocationController:
             city: str,
             state: str,
             zipcode: str
-        ) -> OperationResult[LocationViewModel]:
+        ) -> OperationResult[BrokerViewModel]:
         """
-        Handle location creation requests from any interface.
+        Handle broker creation requests from any interface.
 
         This method demonstrates Clean Architecture's separation of concerns by:
         1. Accepting primitive types as input (making it interface-agnostic)
@@ -94,12 +91,12 @@ class LocationController:
         4. Using a presenter to format the response appropriately
 
         Args:
-            title: The location title
-            description: The location description
+            title: The broker title
+            description: The broker description
 
         Returns:
             OperationResult containing either:
-            - Success: LocationViewModel formatted for the interface
+            - Success: BrokerViewModel formatted for the interface
             - Failure: Error information formatted for the interface
         """
         try:
@@ -107,7 +104,7 @@ class LocationController:
             # Interface->Application boundary crossing
             # It contains validation specific to application needs
             # Ensures data entering the application layer is properly formatted and validated
-            request = CreateLocationRequest(
+            request = CreateBrokerRequest(
                 name=name,
                 street_address=street_address,
                 city=city,
@@ -120,7 +117,7 @@ class LocationController:
 
             if result.is_success:
                 # Convert domain response to view model
-                view_model = self.presenter.present_location(result.value)
+                view_model = self.presenter.present_broker(result.value)
                 return OperationResult.succeed(view_model)
 
             # Handle domain errors
@@ -137,14 +134,14 @@ class LocationController:
     def handle_deactivate(
             self,
             id: str
-            ) -> OperationResult[LocationViewModel]:
+            ) -> OperationResult[BrokerViewModel]:
         try:
-            request = DeactivateLocationRequest(id)
+            request = DeactivateBrokerRequest(id)
 
             result = self.deactivate_use_case.execute(request)
 
             if result.is_success:
-                view_model = self.presenter.present_location(result.value)
+                view_model = self.presenter.present_broker(result.value)
                 return OperationResult.succeed(view_model)
             
             error_vm = self.presenter.present_error(
@@ -160,14 +157,14 @@ class LocationController:
     def handle_activate(
             self,
             id: str
-            ) -> OperationResult[LocationViewModel]:
+            ) -> OperationResult[BrokerViewModel]:
         try:
-            request = ActivateLocationRequest(id)
+            request = ActivateBrokerRequest(id)
 
             result = self.activate_use_case.execute(request)
 
             if result.is_success:
-                view_model = self.presenter.present_location(result.value)
+                view_model = self.presenter.present_broker(result.value)
                 return OperationResult.succeed(view_model)
             
             error_vm = self.presenter.present_error(
@@ -188,13 +185,13 @@ class LocationController:
             city: str,
             state: str,
             zipcode: str
-        ) -> OperationResult[LocationViewModel]:
+        ) -> OperationResult[BrokerViewModel]:
         try:
             # Convert primitive input to use case request model specifically designed for the
             # Interface->Application boundary crossing
             # It contains validation specific to application needs
             # Ensures data entering the application layer is properly formatted and validated
-            request = EditLocationRequest(
+            request = EditBrokerRequest(
                 id=id,
                 name=name,
                 street_address=street_address,
@@ -208,7 +205,7 @@ class LocationController:
 
             if result.is_success:
                 # Convert domain response to view model
-                view_model = self.presenter.present_location(result.value)
+                view_model = self.presenter.present_broker(result.value)
                 return OperationResult.succeed(view_model)
 
             # Handle domain errors
