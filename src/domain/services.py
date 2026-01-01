@@ -1,4 +1,5 @@
-from typing import Literal, Optional, Union
+from datetime import date
+from typing import Optional
 
 from src.domain.aggregates.broker.aggregate import Broker
 from src.domain.aggregates.broker.value_objects import BrokerStatus
@@ -11,47 +12,59 @@ from src.domain.aggregates.location.aggregate import Location
 from src.domain.aggregates.location.value_objects import LocationStatus
 
 
-
 class Dispatcher:
     @staticmethod
     def create_task(
         priority: int,
+        location: Optional[Location],
         instruction: Instruction,
-        location: Union[Location, Literal['TBD']],
+        container: Container,
+        date: date,
         appointment: Optional[Appointment],
         ) -> Task:
         if isinstance(location, Location) and location.status == LocationStatus.INACTIVE:
             raise ValueError('Cannot set a deactivated location on a new task.')
         
-        location_ref = location.id if isinstance(location, Location) else 'TBD'
+        location_ref = location.id if isinstance(location, Location) else None
 
-        return Task(priority, instruction, location_ref, appointment)
+        return Task(
+            priority,
+            instruction,
+            date,
+            container,
+            location_ref,
+            appointment
+        )
     
     @staticmethod
     def create_dispatch(
         broker: Broker,
         containers: list[Container],
         plan: list[Task],
-        driver_ref: Optional[Driver] = None
+        driver: Optional[Driver] = None
         ) -> Dispatch:
         if broker.status == BrokerStatus.INACTIVE:
             raise ValueError('Cannot set a deactivated broker on a dispatch.')
+        if driver.status == DriverStatus.UNAVAILABLE:
+            raise ValueError('Cannot set a unavailable driver on a dispatch.')
+        if driver.status == DriverStatus.DEACTIVATED:
+            raise ValueError('Cannot set a deactivated driver on a dispatch.')
         if len(containers) < 1:
             raise ValueError("A new dispatch requires at least one container.")
         if len(plan) < 2:
             raise ValueError("A new dispatch plan requires at least two tasks.")
         
-        if len(containers) == 1:
-            for task in plan:
-                if task.instruction in (
-                    Instruction.FETCH_CHASSIS,
-                    Instruction.BOBTAIL_TO,
-                    Instruction.TERMINATE_CHASSIS,
-                ):
-                    continue
-                task.container = containers[0]
+        # if len(containers) == 1:
+        #     for task in plan:
+        #         if task.instruction in (
+        #             Instruction.FETCH_CHASSIS,
+        #             Instruction.BOBTAIL_TO,
+        #             Instruction.TERMINATE_CHASSIS,
+        #         ):
+        #             continue
+        #         task.container = containers[0]
         
-        return Dispatch(broker.id, containers, plan, driver_ref)
+        return Dispatch(broker.id, containers, plan, driver.id)
     
     @staticmethod
     def assign_container_to_tasks(dispatch: Dispatch, container: str, task_priorities: list[int]):

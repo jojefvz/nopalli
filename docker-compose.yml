@@ -1,0 +1,36 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/__pycache__
+      - /app/src/__pycache__
+    environment:
+      - FLASK_DEBUG=1
+      - PYTHONUNBUFFERED=1
+      - NOPALLI_DATABASE_TYPE=database
+    command: python web_main.py
+    depends_on:
+      db:
+        condition: service_healthy
+  
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=nopalli
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d nopalli"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

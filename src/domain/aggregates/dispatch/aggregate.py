@@ -4,7 +4,7 @@ from uuid import UUID
 from src.domain.aggregates.driver.aggregate import Driver
 from tests import dispatch
 
-from ...common.entity import AggregateRoot
+from src.domain.common.entity import AggregateRoot
 from .entities import Instruction, Task
 from .utilities import _ALLOWED_FOLLOWS, _ENDABLE, _STARTABLE
 from .value_objects import Appointment, Container, DispatchStatus, TaskStatus

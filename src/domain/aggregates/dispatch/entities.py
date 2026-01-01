@@ -1,9 +1,11 @@
-from datetime import datetime
-from typing import Literal, Optional, Union
+from datetime import date, datetime
+from typing import Optional
 from uuid import UUID
 
-from ...common.entity import Entity
-from .value_objects import Appointment, Instruction, TaskStatus
+from click import Option
+
+from src.domain.common.entity import Entity
+from .value_objects import Appointment, Container, Instruction, TaskStatus
 
 
 class Task(Entity):
@@ -11,18 +13,21 @@ class Task(Entity):
             self,
             priority: int,
             instruction: Instruction,
-            loc_ref: Union[UUID, Literal['TBD']] = 'TBD', 
-            appt: Optional[Appointment] = None
+            date: date,
+            container: Optional[Container] = None,
+            location_ref: Optional[UUID] = None, 
+            appointment: Optional[Appointment] = None
             ):
         super().__init__()
         self._status = TaskStatus.NOT_STARTED
         self.priority = priority
         self.instruction = instruction
-        self.location_ref = loc_ref
+        self.location_ref = location_ref
+        self.date = date
         self._check_in_datetime = None
         self._check_out_datetime = None
-        self.appointment = appt
-        self.container = None
+        self.appointment = appointment
+        self.container = container
         self.completed_by = None
 
     @property

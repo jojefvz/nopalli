@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from typing import Self
 from uuid import UUID
 
-from ...domain.aggregates.broker.aggregate import Broker
-from ...domain.aggregates.broker.value_objects import BrokerStatus
-from ...domain.aggregates.location.value_objects import Address
-from ...domain.exceptions import ValidationError
+from src.domain.aggregates.broker.aggregate import Broker
+from src.domain.aggregates.broker.value_objects import BrokerStatus
+from src.domain.aggregates.location.value_objects import Address
+from src.domain.exceptions import ValidationError
 
 
 @dataclass(frozen=True)

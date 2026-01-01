@@ -1,0 +1,76 @@
+<div class="dispatch-container">
+  <div class="dispatch-details">
+    <h3>{{ dispatch.id }} ({{ dispatch.status.value }})</h3>
+    <div class="dispatch-address">
+      {{ dispatch.driver }}<br>
+      {% for container in dispatch.containers %}
+        <div>{{ container }}</div>
+      {% endfor %}
+    </div>
+    <button class="modal-open edit" href="#edit-dispatch-{{ dispatch.id }}-modal">Edit</button>
+  </div>
+
+  {# <div class="modal" id="edit-dispatch-{{ dispatch.id }}-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-body">
+      <button class="modal-close" href="#edit-dispatch-{{ dispatch.id }}-modal">close</button>
+      <h2>Edit Dispatch</h2>
+      <form action="{{ url_for('dispatch.edit_dispatch') }}" method="post">
+        <input type="hidden" name="id" value="{{ dispatch.id }}">
+        <p>
+          <label for="name">Dispatch Name</label>
+          <input type="text" id="name" name="name" value="{{ dispatch.name }}" required>
+        </p>
+        <p>
+          <label for="street_address">Street Address</label>
+          <input type="text" id="street_address" name="street_address" value="{{ dispatch.street_address }}" required>
+        </p>
+        <p>
+          <label for="city">City</label>
+          <input type="text" id="city" name="city" value="{{ dispatch.city }}" required>
+        </p>
+        <p>
+          <label for="state">State</label>
+          <input type="text" id="state" name="state" value="{{ dispatch.state }}" required>
+        </p>
+        <p>
+          <label for="zipcode">Zipcode</label>
+          <input type="text" id="zipcode" name="zipcode" value="{{ dispatch.zipcode }}" required>
+        </p>
+        <p><button type="submit" class="modal-submit">Submit</button></p>
+      </form>
+    </div>
+  </div> #}
+
+  {# <div class="modal" id="activation-{{ dispatch.id }}-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-body">
+      <button class="modal-close" href="#activation-{{ dispatch.id }}-modal">close</button>
+      {% if dispatch.status == 'ACTIVE' %}
+      <h2>Deactivating Dispatch: {{ dispatch.name }}</h2>
+      <form action="{{ url_for('dispatch.deactivate') }}" method="post">
+        <p>
+          Are you sure you would like to deactivate this dispatch?
+          Dispatch will no longer be available for selection. Dispatch can be activated again, if needed.
+        </p>
+        <input type="hidden" name="id" value="{{ dispatch.id }}">
+        <p>
+          <button type="submit" class="modal-submit">Deactivate</button>
+        </p>
+      </form>
+      {% else %}
+      <h2>Activating Dispatch: {{ dispatch.name }}</h2>
+      <form action="{{ url_for('dispatch.activate') }}" method="post">
+        <p>
+          Are you sure you would like to activate this dispatch?
+          Dispatch will be available for dispatch selection.
+        </p>
+        <input type="hidden" name="id" value="{{ dispatch.id }}">
+        <p>
+          <button type="submit" class="modal-submit">Activate</button>
+        </p>
+      </form>
+      {% endif %}
+    </div>
+  </div> #}
+</div>

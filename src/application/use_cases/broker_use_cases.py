@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 
-from ..common.result import Error, Result
-from ..dtos.broker_dtos import (
+from src.application.common.result import Error, Result
+from src.application.dtos.broker_dtos import (
     CreateBrokerRequest, 
     BrokerResponse,
     DeactivateBrokerRequest,
     ActivateBrokerRequest,
     EditBrokerRequest,
     )
-from ..repositories.broker_repository import BrokerRepository
-from ...domain.aggregates.broker.aggregate import Broker
-from ...domain.exceptions import ValidationError, BusinessRuleViolation
+from src.application.repositories.broker_repository import BrokerRepository
+from src.domain.aggregates.broker.aggregate import Broker
+from src.domain.exceptions import ValidationError, BusinessRuleViolation
 
 
 @dataclass

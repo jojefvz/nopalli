@@ -5,7 +5,7 @@ This module defines the repository interface for Location entity persistence.
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from ...domain.aggregates.location.aggregate import Location
+from src.domain.aggregates.location.aggregate import Location
 
 
 

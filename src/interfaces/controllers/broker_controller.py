@@ -17,16 +17,16 @@ Key Clean Architecture benefits demonstrated in these controllers:
 
 from dataclasses import dataclass
 
-from ...interfaces.presenters.broker_presenter import BrokerPresenter
-from ...interfaces.view_models.broker_vm import BrokerViewModel
-from ...interfaces.view_models.base import OperationResult
-from ...application.dtos.broker_dtos import (
+from src.interfaces.presenters.broker_presenter import BrokerPresenter
+from src.interfaces.view_models.broker_vm import BrokerViewModel
+from src.interfaces.view_models.base import OperationResult
+from src.application.dtos.broker_dtos import (
     CreateBrokerRequest,
     DeactivateBrokerRequest,
     ActivateBrokerRequest,
     EditBrokerRequest
     )
-from ...application.use_cases.broker_use_cases import (
+from src.application.use_cases.broker_use_cases import (
     ListBrokersUseCase,
     CreateBrokerUseCase,
     DeactivateBrokerUseCase,

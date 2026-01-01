@@ -1,6 +1,6 @@
 from .value_objects import BrokerStatus
-from ...common.entity import AggregateRoot
-from ..location.value_objects import Address
+from src.domain.common.entity import AggregateRoot
+from src.domain.aggregates.location.value_objects import Address
 
 
 class Broker(AggregateRoot):

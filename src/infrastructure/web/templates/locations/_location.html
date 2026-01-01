@@ -5,19 +5,19 @@
       {{ location.street_address }}<br>
       {{ location.city }}, {{ location.state }} {{ location.zipcode }}
     </div>
-    <button class="modal-open edit" href="#edit-location-{{ location.id }}-modal">Edit</button>
+    <button class="modal-open js-modal-open edit" data-modal-target="#edit-location-{{ location.id }}-modal">Edit</button>
   </div>
 
-  {% if location.status == 'ACTIVE' %}
-  <button class="modal-open" href="#activation-{{ location.id }}-modal">Deactivate</button>
+  {% if location.status == 'Active' %}
+  <button class="modal-open js-modal-open" data-modal-target="#activation-{{ location.id }}-modal">Deactivate</button>
   {% else%}
-  <button class="modal-open" href="#activation-{{ location.id }}-modal">Activate</button>
+  <button class="modal-open js-modal-open" data-modal-target="#activation-{{ location.id }}-modal">Activate</button>
   {% endif %}
 
-  <div class="modal" id="edit-location-{{ location.id }}-modal">
+  <div class="modal js-modal hidden" id="edit-location-{{ location.id }}-modal">
     <div class="modal-backdrop"></div>
     <div class="modal-body">
-      <button class="modal-close" href="#edit-location-{{ location.id }}-modal">close</button>
+      <button class="modal-close js-modal-close" data-modal-target="#edit-location-{{ location.id }}-modal">close</button>
       <h2>Edit Location</h2>
       <form action="{{ url_for('location.edit_location') }}" method="post">
         <input type="hidden" name="id" value="{{ location.id }}">
@@ -46,16 +46,16 @@
     </div>
   </div>
 
-  <div class="modal" id="activation-{{ location.id }}-modal">
+  <div class="modal js-modal hidden" id="activation-{{ location.id }}-modal">
     <div class="modal-backdrop"></div>
     <div class="modal-body">
-      <button class="modal-close" href="#activation-{{ location.id }}-modal">close</button>
-      {% if location.status == 'ACTIVE' %}
+      <button class="modal-close js-modal-close" data-modal-target="#activation-{{ location.id }}-modal">close</button>
+      {% if location.status == 'Active' %}
       <h2>Deactivating Location: {{ location.name }}</h2>
       <form action="{{ url_for('location.deactivate') }}" method="post">
         <p>
           Are you sure you would like to deactivate this location?
-          This location will no longer be available for location selection. Location can be activated again, if needed.
+          Location will no longer be available for selection. Location can be activated again, if needed.
         </p>
         <input type="hidden" name="id" value="{{ location.id }}">
         <p>
@@ -67,7 +67,7 @@
       <form action="{{ url_for('location.activate') }}" method="post">
         <p>
           Are you sure you would like to activate this location?
-          This location will become available for location selection.
+          Location will be available for location selection.
         </p>
         <input type="hidden" name="id" value="{{ location.id }}">
         <p>

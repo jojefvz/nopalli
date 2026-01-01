@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import Self
 from uuid import UUID
 
-from ...domain.aggregates.location.aggregate import Location
-from ...domain.aggregates.location.value_objects import Address, LocationStatus
-from ...domain.exceptions import ValidationError
+from src.domain.aggregates.location.aggregate import Location
+from src.domain.aggregates.location.value_objects import Address, LocationStatus
+from src.domain.exceptions import ValidationError
 
 
 @dataclass(frozen=True)
@@ -30,15 +30,17 @@ class CreateLocationRequest:
         if not self.city.strip():
             raise ValidationError("City name is required")
         if len(self.city) > 100:
-            raise ValidationError("City name cannot exceed 100 characters")
+            raise ValidationError("City name cannot exceed 50 characters")
         if not self.state.strip():
             raise ValidationError("State abbreviation is required")
         if len(self.state) != 2:
             raise ValidationError("State abbreviation must be 2 characters")
         if not self.zipcode.strip():
             raise ValidationError("Zipcode is required")
+        if not self.zipcode.isdigit():
+            raise ValidationError("Zipcode must be numeric characters only")
         if len(self.zipcode) != 5:
-            raise ValidationError("Zipcode must be exactly 5 numbers.")
+            raise ValidationError("Zipcode length must be 5 numbers.")
 
     def to_execution_params(self) -> dict:
         """Convert request data to use case parameters."""
@@ -114,15 +116,17 @@ class EditLocationRequest:
         if not self.city.strip():
             raise ValidationError("City name is required")
         if len(self.city) > 100:
-            raise ValidationError("City name cannot exceed 100 characters")
+            raise ValidationError("City name cannot exceed 50 characters")
         if not self.state.strip():
             raise ValidationError("State abbreviation is required")
         if len(self.state) != 2:
             raise ValidationError("State abbreviation must be 2 characters")
         if not self.zipcode.strip():
             raise ValidationError("Zipcode is required")
+        if not self.zipcode.isdigit():
+            raise ValidationError("Zipcode must be numeric characters only")
         if len(self.zipcode) != 5:
-            raise ValidationError("Zipcode must be exactly 5 numbers.")
+            raise ValidationError("Zipcode length must be 5 numbers.")
 
     def to_execution_params(self) -> dict:
         """Convert request data to use case parameters."""

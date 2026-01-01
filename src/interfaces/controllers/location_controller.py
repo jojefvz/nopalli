@@ -16,20 +16,19 @@ Key Clean Architecture benefits demonstrated in these controllers:
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
-from src.infrastructure.web.routes.location.routes import deactivate
+from src.domain.exceptions import ValidationError
 
-from ...interfaces.presenters.location_presenter import LocationPresenter
-from ...interfaces.view_models.location_vm import LocationViewModel
-from ...interfaces.view_models.base import OperationResult
-from ...application.dtos.location_dtos import (
+from src.interfaces.presenters.location_presenter import LocationPresenter
+from src.interfaces.view_models.location_vm import LocationViewModel
+from src.interfaces.view_models.base import OperationResult
+from src.application.dtos.location_dtos import (
     CreateLocationRequest,
     DeactivateLocationRequest,
     ActivateLocationRequest,
     EditLocationRequest
     )
-from ...application.use_cases.location_use_cases import (
+from src.application.use_cases.location_use_cases import (
     ListLocationsUseCase,
     CreateLocationUseCase,
     DeactivateLocationUseCase,
@@ -65,16 +64,6 @@ class LocationController:
     activate_use_case: ActivateLocationUseCase
     edit_use_case: EditLocationUseCase
     presenter: LocationPresenter
-
-    def handle_list(self) -> OperationResult[list[LocationViewModel]]:
-        result = self.list_use_case.execute()
-
-        if result.is_success:
-            view_models = [self.presenter.present_location(proj) for proj in result.value]
-            return OperationResult.succeed(view_models)
-
-        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
-        return OperationResult.fail(error_vm.message, error_vm.code)
 
     def handle_create(
             self,
@@ -114,7 +103,7 @@ class LocationController:
                 state=state,
                 zipcode=zipcode,
                 )
-
+            
             # Execute use case and get domain-oriented result
             result = self.create_use_case.execute(request)
 
@@ -129,11 +118,21 @@ class LocationController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
 
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
 
+    def handle_list(self) -> OperationResult[list[LocationViewModel]]:
+        result = self.list_use_case.execute()
+
+        if result.is_success:
+            view_models = [self.presenter.present_location(loc) for loc in result.value]
+            return OperationResult.succeed(view_models)
+
+        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
+        return OperationResult.fail(error_vm.message, error_vm.code)
+    
     def handle_deactivate(
             self,
             id: str

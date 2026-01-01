@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nopalli</title>
-    <link rel="stylesheet" href="../static/base.css">
+    <link rel="stylesheet" href="../static/css/base.css">
     {% block main_css %}{% endblock %}
 </head>
 <body>
@@ -13,19 +13,28 @@
     <nav>
       <ul class="site-nav">
         <li><a href="{{ url_for('home.home') }}">Home</a></li>
-        <li class="dropdown">
-          <div class="dropdown-label">Dispatch</div>
-          <div class="dropdown-menu">
+        <li class="dropdown nav">
+          <div class="dropdown-label nav">Dispatch</div>
+          <div class="dropdown-menu nav">
             <ul class="submenu">
-              <li><a href="">Dispatches</a></li>
               <li><a href="">Loadboard</a></li>
-              <li><a href="">Drivers</a></li>
+              <li><a href="{{ url_for('dispatch.list_dispatches') }}">Dispatches</a></li>
+              <li><a href="{{ url_for('driver.list_drivers') }}">Drivers</a></li>
               <li><a href="{{ url_for('broker.list_brokers') }}">Brokers</a></li>
               <li><a href="{{ url_for('location.list_locations') }}">Locations</a></li>
             </ul>
           </div>
         </li>
-        <li><a href="">Invoicing</a></li>
+        <li class="dropdown nav">
+          <div class="dropdown-label nav">Invoicing</div>
+          <div class="dropdown-menu nav">
+            <ul class="submenu">
+              <li><a href="">Validations</a></li>
+              <li><a href="">Invoiced</a></li>
+              <li><a href="">Reports</a></li>
+            </ul>
+          </div>
+        </li>
         <li><a href="">Reports</a></li>
         <li><a href="">Admin</a></li>
       </ul>
@@ -34,5 +43,6 @@
   <main>
     {% block content %}{% endblock %}
   </main>
+  {% block script %}{% endblock %}
 </body>
 </html>

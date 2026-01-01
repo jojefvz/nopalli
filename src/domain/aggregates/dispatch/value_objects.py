@@ -3,53 +3,52 @@ from datetime import date, time
 from enum import Enum
 from typing import Optional
 
-from ...common.value_object import ValueObject
+from src.domain.common.value_object import ValueObject
 
 
 class DispatchStatus(ValueObject, Enum):
-    DRAFT = "DRAFT"
-    IN_PROGRESS = "IN_PROGRESS"
-    PAUSED = "PAUSED"
-    COMPLETED = "COMPLETED"
-    CANCELLED = "CANCELLED"
+    DRAFT = "draft"
+    IN_PROGRESS = "in_progress"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
 
 @dataclass
 class Container(ValueObject):
     number: str
 
 class TaskStatus(Enum):
-    NOT_STARTED = 'NOT_STARTED'
-    IN_PROGRESS = 'IN_PROGRESS'
-    COMPLETED = 'COMPLETED'
-    STOP_OFF = 'STOP_OFF'
-    VOIDED = 'VOIDED'
+    NOT_STARTED = 'not_started'
+    IN_PROGRESS = 'in_progress'
+    COMPLETED = 'completed'
+    STOP_OFF = 'stop_off'
+    VOIDED = 'voided'
 
 class Instruction(Enum):
-    FETCH_CHASSIS = 'FETCH_CHASSIS'
-    PREPULL = 'PREPULL'
-    BOBTAIL_TO = 'BOBTAIL_TO'
-    PICKUP_EMPTY = 'PICKUP_EMPTY'
-    DROP_EMPTY = 'DROP_EMPTY'
-    LIVE_LOAD = 'LIVE_LOAD'
-    PICKUP_LOADED = 'PICKUP_LOADED'
-    DROP_LOADED = 'DROP_LOADED'
-    LIVE_UNLOAD = 'LIVE_UNLOAD'
-    TERMINATE_EMPTY = 'TERMINATE_EMPTY'
-    TERMINATE_CHASSIS = 'TERMINATE_CHASSIS'
-    INGATE = 'INGATE'
-    YARD_PULL = 'YARD_PULL'
-    STREET_TURN = 'STREET_TURN'
+    FETCH_CHASSIS = 'fetch_chassis'
+    PREPULL = 'prepull'
+    BOBTAIL_TO = 'bobtail_to'
+    PICKUP_EMPTY = 'pickup_empty'
+    DROP_EMPTY = 'drop_empty'
+    LIVE_LOAD = 'live_load'
+    PICKUP_LOADED = 'pickup_loaded'
+    DROP_LOADED = 'drop_loaded'
+    LIVE_UNLOAD = 'live_unload'
+    TERMINATE_EMPTY = 'terminate_empty'
+    TERMINATE_CHASSIS = 'terminate_chassis'
+    INGATE = 'ingate'
+    YARD_PULL = 'yard_pull'
+    STREET_TURN = 'street_turn'
 
 class AppointmentType(Enum):
-    OPEN = 'OPEN'
-    EXACT_TIME = 'EXACT_TIME'
-    TIME_WINDOW = 'TIME_WINDOW'
-    READY_AFTER = 'READY_AFTER'
-    DEADLINE = 'DEADLINE'
+    OPEN = 'open'
+    EXACT_TIME = 'exact_time'
+    TIME_WINDOW = 'time_window'
+    READY_AFTER = 'ready_after'
+    FINISH_BY = 'finish_by'
 
 @dataclass
 class Appointment(ValueObject):
         appointment_type: AppointmentType
-        appointment_date: date
         start_time: Optional[time] = None
         end_time: Optional[time] = None

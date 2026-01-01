@@ -21,13 +21,3 @@
 .location-details div {
     margin-top: 0;
 }
-
-.modal-open {
-    padding: .5em 1em;
-    border: none;
-    margin-right: 1em;
-}
-
-.modal-open.edit {
-    padding: .3em .8em;
-}

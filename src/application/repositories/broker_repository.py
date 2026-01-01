@@ -5,7 +5,7 @@ This module defines the repository interface for Broker entity persistence.
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from ...domain.aggregates.broker.aggregate import Broker
+from src.domain.aggregates.broker.aggregate import Broker
 
 
 

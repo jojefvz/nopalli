@@ -1,0 +1,60 @@
+<div class="driver-container">
+  <div class="driver-details">
+    <h3>{{ driver.name }} ({{ driver.status }})</h3>
+    <button class="modal-open edit" href="#edit-driver-{{ driver.id }}-modal">Edit</button>
+  </div>
+
+  {% if driver.status == 'AVAILABLE' %}
+  <button class="modal-open" href="#activation-{{ driver.id }}-modal">Deactivate</button>
+  {% elif driver.status == 'DEACTIVATED' %}
+  <button class="modal-open" href="#activation-{{ driver.id }}-modal">Reactivate</button>
+  {% endif %}
+
+  <div class="modal" id="edit-driver-{{ driver.id }}-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-body">
+      <button class="modal-close" href="#edit-driver-{{ driver.id }}-modal">close</button>
+      <h2>Edit Driver</h2>
+      <form action="{{ url_for('driver.edit_driver') }}" method="post">
+        <input type="hidden" name="id" value="{{ driver.id }}">
+        <p>
+          <label for="name">Driver Name</label>
+          <input type="text" id="name" name="name" value="{{ driver.name }}" required>
+        </p>
+        <p><button type="submit" class="modal-submit">Submit</button></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="activation-{{ driver.id }}-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-body">
+      <button class="modal-close" href="#activation-{{ driver.id }}-modal">close</button>
+      {% if driver.status == 'AVAILABLE' %}
+      <h2>Deactivating Driver: {{ driver.name }}</h2>
+      <form action="{{ url_for('driver.deactivate') }}" method="post">
+        <p>
+          Are you sure you would like to deactivate this driver?
+          Driver will no longer be available for selection, but can be reactivated if needed.
+        </p>
+        <input type="hidden" name="id" value="{{ driver.id }}">
+        <p>
+          <button type="submit" class="modal-submit">Deactivate</button>
+        </p>
+      </form>
+      {% elif driver.status == 'DEACTIVATED' %}
+      <h2>Activating Driver: {{ driver.name }}</h2>
+      <form action="{{ url_for('driver.activate') }}" method="post">
+        <p>
+          Are you sure you would like to reactivate this driver?
+          Driver will be available for selection.
+        </p>
+        <input type="hidden" name="id" value="{{ driver.id }}">
+        <p>
+          <button type="submit" class="modal-submit">Reactivate</button>
+        </p>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>

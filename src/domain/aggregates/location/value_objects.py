@@ -11,5 +11,5 @@ class Address(ValueObject):
     zipcode: int
 
 class LocationStatus(Enum):
-    INACTIVE = 'INACTIVE'
-    ACTIVE = 'ACTIVE'
+    INACTIVE = 'inactive'
+    ACTIVE = 'active'

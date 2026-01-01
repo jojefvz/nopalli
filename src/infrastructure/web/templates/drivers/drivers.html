@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block main_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/drivers/drivers.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/drivers/_driver.css') }}">
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="container-subheading">
+      <h2>Drivers</h2>
+      <button class="modal-open" href="#new-driver-modal">Add Driver</button>
+    </div>
+
+    <div class="drivers-list-container">
+      {% for driver in drivers %}
+        {% include 'drivers/_driver.html' %}
+      {% endfor %}
+    </div>
+
+    <div class="modal" id="new-driver-modal">
+      <div class="modal-backdrop"></div>
+      <div class="modal-body">
+        <button class="modal-close" href="#new-driver-modal">close</button>
+        <h2>Add New Driver</h2>
+        <form action="{{ url_for('driver.new_driver') }}" method="post">
+          <p>
+            <label for="name">Driver Name</label>
+            <input type="text" id="name" name="name" required>
+          </p>
+          <p><button type="submit" class="modal-submit">Submit</button></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    let open_btns = document.querySelectorAll('button.modal-open');
+    let close_btns = document.querySelectorAll('button.modal-close');
+    let modals = document.querySelectorAll('.modal')
+
+    for (let i = 0; i < open_btns.length; i++) {
+        open_btns[i].onclick = function (event) {
+          event.preventDefault();
+          modal = document.querySelector(event.target.getAttribute("href"));
+          modal.style.display = 'block';
+        };
+    }
+    
+    for (let i = 0; i < close_btns.length; i++) {
+        close_btns[i].onclick = function (event) {
+          event.preventDefault();
+          modal = document.querySelector(event.target.getAttribute("href"));
+          modal.style.display = 'none';
+        };
+    }
+
+    window.addEventListener('click', (e) => {
+      console.log(e);
+      if (e.target.classList.contains('modal-backdrop')) {
+        modals.forEach(m => m.style.display = 'none');
+      }
+    });
+
+    fetch('/api/drivers')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {console.log("Fetched drivers:", data)})
+      .catch((err) => {console.error("Fetch error:", err)});
+  </script>
+{% endblock %}

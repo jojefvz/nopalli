@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 
 {% block main_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='locations/locations.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='locations/_location.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/locations/locations.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/locations/_location.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/toast.css') }}">
 {% endblock %}
 
 {% block content %}
   <div class="container">
     <div class="container-subheading">
       <h2>Locations</h2>
-      <button class="modal-open" href="#new-location-modal">New Location</button>
+      <button 
+      type="button" 
+      class="modal-open js-modal-open" 
+      data-modal-target="#new-location-modal">New Location</button>
     </div>
 
     <div class="locations-list-container">
@@ -18,56 +23,122 @@
       {% endfor %}
     </div>
 
-    <div class="modal" id="new-location-modal">
+    <div class="modal js-modal hidden" id="new-location-modal">
       <div class="modal-backdrop"></div>
       <div class="modal-body">
-        <button class="modal-close" href="#new-location-modal">close</button>
+        <button 
+        type="button" 
+        class="modal-close js-modal-close" 
+        data-modal-target="#new-location-modal">close</button>
         <h2>Add New Location</h2>
-        <form action="{{ url_for('location.new_location') }}" method="post">
+        <form id="new-location-form" method="post">
           <p>
             <label for="name">Location Name</label>
-            <input type="text" id="name" name="name" required>
+            <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            minlength="2"
+            maxlength="100"
+            required>
           </p>
           <p>
             <label for="street_address">Street Address</label>
-            <input type="text" id="street_address" name="street_address" required>
+            <input 
+            type="text" 
+            id="street_address" 
+            name="street_address" 
+            minlength="2"
+            maxlength="100"
+            required>
           </p>
           <p>
             <label for="city">City</label>
-            <input type="text" id="city" name="city" required>
+            <input
+            type="text"
+            id="city"
+            name="city"
+            minlength="2"
+            maxlength="50"
+            required>
           </p>
           <p>
             <label for="state">State</label>
-            <input type="text" id="state" name="state" required>
+            <select name="state" id="state" required>
+              <option value="" disabled selected>Select a State</option>
+              <option value="AL">Alabama</option>
+              <option value="AK">Alaska</option>
+              <option value="AZ">Arizona</option>
+              <option value="AR">Arkansas</option>
+              <option value="CA">California</option>
+              <option value="CO">Colorado</option>
+              <option value="CT">Connecticut</option>
+              <option value="DE">Delaware</option>
+              <option value="DC">District Of Columbia</option>
+              <option value="FL">Florida</option>
+              <option value="GA">Georgia</option>
+              <option value="HI">Hawaii</option>
+              <option value="ID">Idaho</option>
+              <option value="IL">Illinois</option>
+              <option value="IN">Indiana</option>
+              <option value="IA">Iowa</option>
+              <option value="KS">Kansas</option>
+              <option value="KY">Kentucky</option>
+              <option value="LA">Louisiana</option>
+              <option value="ME">Maine</option>
+              <option value="MD">Maryland</option>
+              <option value="MA">Massachusetts</option>
+              <option value="MI">Michigan</option>
+              <option value="MN">Minnesota</option>
+              <option value="MS">Mississippi</option>
+              <option value="MO">Missouri</option>
+              <option value="MT">Montana</option>
+              <option value="NE">Nebraska</option>
+              <option value="NV">Nevada</option>
+              <option value="NH">New Hampshire</option>
+              <option value="NJ">New Jersey</option>
+              <option value="NM">New Mexico</option>
+              <option value="NY">New York</option>
+              <option value="NC">North Carolina</option>
+              <option value="ND">North Dakota</option>
+              <option value="OH">Ohio</option>
+              <option value="OK">Oklahoma</option>
+              <option value="OR">Oregon</option>
+              <option value="PA">Pennsylvania</option>
+              <option value="RI">Rhode Island</option>
+              <option value="SC">South Carolina</option>
+              <option value="SD">South Dakota</option>
+              <option value="TN">Tennessee</option>
+              <option value="TX">Texas</option>
+              <option value="UT">Utah</option>
+              <option value="VT">Vermont</option>
+              <option value="VA">Virginia</option>
+              <option value="WA">Washington</option>
+              <option value="WV">West Virginia</option>
+              <option value="WI">Wisconsin</option>
+              <option value="WY">Wyoming</option>
+            </select>
           </p>
           <p>
             <label for="zipcode">Zipcode</label>
-            <input type="text" id="zipcode" name="zipcode" required>
+            <input 
+            type="text" 
+            id="zipcode" 
+            name="zipcode"
+            maxlength="5" 
+            pattern="[0-9]{5}"
+            required
+            title="Enter a 5-digit ZIP code">
           </p>
-          <p><button type="submit" class="modal-submit">Submit</button></p>
+          <p><button 
+              type="submit" 
+              class="modal-submit js-modal-submit">Submit</button></p>
         </form>
       </div>
     </div>
   </div>
+{% endblock %}
 
-  <script type="text/javascript">
-    let open_btns = document.querySelectorAll('button.modal-open');
-    let close_btns = document.querySelectorAll('button.modal-close');
-
-    for (let i = 0; i < open_btns.length; i++) {
-        open_btns[i].onclick = function (event) {
-          event.preventDefault();
-          modal = document.querySelector(event.target.getAttribute("href"));
-          modal.style.display = 'block';
-        };
-    }
-    
-    for (let i = 0; i < close_btns.length; i++) {
-        close_btns[i].onclick = function (event) {
-          event.preventDefault();
-          modal = document.querySelector(event.target.getAttribute("href"));
-          modal.style.display = 'none';
-        };
-    }
-  </script>
+{% block script %}
+  <script type="module" src="../../static/scripts/locations.js"></script>
 {% endblock %}

@@ -2,9 +2,9 @@ from typing import Dict, Sequence
 from uuid import UUID
 from logging import getLogger
 
-from ....application.repositories.broker_repository import BrokerRepository
-from ....domain.aggregates.broker.aggregate import Broker
-from ....domain.exceptions import BrokerNotFoundError
+from src.application.repositories.broker_repository import BrokerRepository
+from src.domain.aggregates.broker.aggregate import Broker
+from src.domain.exceptions import BrokerNotFoundError
 
 
 logger = getLogger(__name__)

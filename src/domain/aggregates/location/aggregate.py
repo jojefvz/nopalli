@@ -1,6 +1,6 @@
 from .value_objects import Address, LocationStatus
-from ...common.entity import AggregateRoot
-from ...exceptions import BusinessRuleViolation
+from src.domain.common.entity import AggregateRoot
+from src.domain.exceptions import BusinessRuleViolation
 
 
 

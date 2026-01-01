@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from ...interfaces.view_models.base import ErrorViewModel
-from ...application.dtos.broker_dtos import BrokerResponse
-from ...interfaces.view_models.broker_vm import BrokerViewModel
+from src.interfaces.view_models.base import ErrorViewModel
+from src.application.dtos.broker_dtos import BrokerResponse
+from src.interfaces.view_models.broker_vm import BrokerViewModel
 
 
 class BrokerPresenter(ABC):

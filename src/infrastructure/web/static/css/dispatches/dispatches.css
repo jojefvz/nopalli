@@ -1,0 +1,122 @@
+.container {
+  background-color: #f4f4f4;
+  padding-bottom: 1em;
+} .container-subheading {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-top: 1em;
+  } .container-subheading h2 {
+      margin-left: .8em;
+    } .container-subheading button {
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: white;
+        box-shadow: .05em .05em 0.5em rgba(99, 99, 99, 0.2);
+        padding: 1em 1em;
+        margin-right: 1.2em;
+        border: none;
+        border-radius: .2em;
+      }
+      .form-broker {
+        position: relative;
+      } .form-broker .dropdown {
+          margin: 0;
+          border: 1px solid black;
+          background-color: white;
+          border-radius: 3px;
+          position: absolute;
+          width: 19%;
+          top: 1.3em;
+          left: 3.2em;
+          max-height: 7em;
+          overflow: auto;
+          z-index: 1;
+          }   .form-broker .dropdown div:hover {
+              background-color: rgb(213, 212, 212);
+              }   .form-broker .dropdown div {
+                  margin: 0;
+                  }
+      .form-driver {
+        position: relative;
+      } .form-driver .dropdown {
+          margin: 0;
+          border: 1px solid black;
+          background-color: white;
+          border-radius: 3px;
+          position: absolute;
+          width: 19.2%;
+          top: 1.3em;
+          left: 2.9em;
+          max-height: 7em;
+          overflow: auto;
+          z-index: 1;
+        }   .form-driver .dropdown div:hover {
+              background-color: rgb(213, 212, 212);
+            }   .form-driver .dropdown div {
+                  margin: 0;
+                }
+      .form-container {
+        margin: 0;
+      }
+      .form-task {
+        padding: 10px;
+        position: relative;
+        background-color: rgb(226, 242, 255);
+        width: 50%;
+        border-radius: 5px;
+      } .form-task h3 {
+          margin: 0;
+        }
+        .form-task-remove {
+          position: absolute;
+          top: .3em;
+          right: .3em;
+          padding: .3em;
+          cursor: pointer;
+          font-size: 2em;
+          height: 1em;
+          width: 1em;
+          text-indent: 10em;
+          overflow: hidden;
+          border: 0;
+          background: none;
+        } .form-task-remove::after {
+            position: absolute;
+            line-height: .5;
+            top: .2em;
+            left: .1em;
+            text-indent: 0;
+            content: '\00D7';
+          }
+        .form-location {
+          position: relative;
+        } .form-location .dropdown {
+            margin: 0;
+            border: 1px solid black;
+            background-color: white;
+            border-radius: 3px;
+            position: absolute;
+            width: 40.5%;
+            top: 1.3em;
+            left: 4.05em;
+            max-height: 7em;
+            overflow: auto;
+            z-index: 1;
+          } .form-location .dropdown div:hover {
+              background-color: rgb(213, 212, 212);
+            } .form-location .dropdown div {
+                margin: 0;
+              }
+        .form-appointment {
+          position: relative;
+        } div.appointment {
+            position: absolute;
+            margin: 0;
+            width: 100%;
+            padding-left: .5em;
+            padding-right: .11em;
+            padding-bottom: .5em;
+            background-color: rgb(237, 234, 234);
+            /* border: 1px solid black; */
+          }
+        

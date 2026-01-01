@@ -1,37 +1,16 @@
 from dataclasses import dataclass
 
-from ..common.result import Error, Result
-from ..dtos.location_dtos import (
+from src.application.common.result import Error, Result
+from src.application.dtos.location_dtos import (
     CreateLocationRequest, 
     LocationResponse,
     DeactivateLocationRequest,
     ActivateLocationRequest,
     EditLocationRequest,
     )
-from ..repositories.location_repository import LocationRepository
-from ...domain.aggregates.location.aggregate import Location
-from ...domain.exceptions import ValidationError, BusinessRuleViolation
-from src.application.repositories import location_repository
-
-
-@dataclass
-class ListLocationsUseCase:
-    location_repository: LocationRepository
-
-    def execute(self) -> Result[list[LocationResponse]]:
-        """
-        List all locations.
-
-        Returns:
-            Result containing either:
-            - Success: List of LocationResponse objects
-            - Failure: Error information
-        """
-        try:
-            locations = self.location_repository.get_all()
-            return Result.success([LocationResponse.from_entity(l) for l in locations])
-        except BusinessRuleViolation as e:
-            return Result.failure(Error.business_rule_violation(str(e)))
+from src.application.repositories.location_repository import LocationRepository
+from src.domain.aggregates.location.aggregate import Location
+from src.domain.exceptions import ValidationError, BusinessRuleViolation
         
 
 @dataclass
@@ -59,6 +38,27 @@ class CreateLocationUseCase:
         except BusinessRuleViolation as e:
             return Result.failure(Error.business_rule_violation(str(e)))
         
+
+@dataclass
+class ListLocationsUseCase:
+    location_repository: LocationRepository
+
+    def execute(self) -> Result[list[LocationResponse]]:
+        """
+        List all locations.
+
+        Returns:
+            Result containing either:
+            - Success: List of LocationResponse objects
+            - Failure: Error information
+        """
+        try:
+            locations = self.location_repository.get_all()
+            return Result.success([LocationResponse.from_entity(l) for l in locations])
+        except BusinessRuleViolation as e:
+            return Result.failure(Error.business_rule_violation(str(e)))
+
+        
 @dataclass
 class DeactivateLocationUseCase:
     """Use case for deactivating a location."""
@@ -80,6 +80,7 @@ class DeactivateLocationUseCase:
             return Result.failure(Error.validation_error(str(e)))
         except BusinessRuleViolation as e:
             return Result.failure(Error.business_rule_violation(str(e)))
+
 
 @dataclass
 class ActivateLocationUseCase:

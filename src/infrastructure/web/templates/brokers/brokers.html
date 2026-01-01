@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block main_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='brokers/brokers.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='brokers/_broker.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/brokers/brokers.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/brokers/_broker.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -53,21 +53,29 @@
   <script type="text/javascript">
     let open_btns = document.querySelectorAll('button.modal-open');
     let close_btns = document.querySelectorAll('button.modal-close');
+    let modals = document.querySelectorAll('.modal');
 
     for (let i = 0; i < open_btns.length; i++) {
-        open_btns[i].onclick = function (event) {
-          event.preventDefault();
-          modal = document.querySelector(event.target.getAttribute("href"));
-          modal.style.display = 'block';
-        };
+      open_btns[i].addEventListener('click', (event) => {
+        event.preventDefault();
+        modal = document.querySelector(event.target.getAttribute("href"));
+        modal.style.display = 'block';
+      });
     }
     
     for (let i = 0; i < close_btns.length; i++) {
-        close_btns[i].onclick = function (event) {
-          event.preventDefault();
-          modal = document.querySelector(event.target.getAttribute("href"));
-          modal.style.display = 'none';
-        };
+      close_btns[i].onclick = function (event) {
+        event.preventDefault();
+        modal = document.querySelector(event.target.getAttribute("href"));
+        modal.style.display = 'none';
+      };
     }
+
+    window.addEventListener('click', (e) => {
+      console.log(e);
+      if (e.target.classList.contains('modal-backdrop')) {
+        modals.forEach(m => m.style.display = 'none');
+      }
+    });
   </script>
 {% endblock %}

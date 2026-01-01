@@ -55,7 +55,7 @@
       <form action="{{ url_for('broker.deactivate') }}" method="post">
         <p>
           Are you sure you would like to deactivate this broker?
-          This broker will no longer be available for broker selection. Broker can be activated again, if needed.
+          Broker will no longer be available for selection. Broker can be activated again, if needed.
         </p>
         <input type="hidden" name="id" value="{{ broker.id }}">
         <p>
@@ -67,7 +67,7 @@
       <form action="{{ url_for('broker.activate') }}" method="post">
         <p>
           Are you sure you would like to activate this broker?
-          This broker will become available for broker selection.
+          Broker will be available for broker selection.
         </p>
         <input type="hidden" name="id" value="{{ broker.id }}">
         <p>

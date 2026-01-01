@@ -1,0 +1,104 @@
+.container {
+    background-color: #f4f4f4;
+    padding-bottom: 1em;
+}
+
+.container-subheading {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-top: 1em;
+}
+
+.container-subheading h2 {
+    margin-left: .8em;
+}
+
+.container-subheading button {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: white;
+    box-shadow: .05em .05em 0.5em rgba(99, 99, 99, 0.2);
+    padding: 1em 1em;
+    margin-right: 1.2em;
+    border: none;
+    border-radius: .2em;
+}
+
+.modal {
+    display: none;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, .5);
+}
+
+.modal-body {
+    position: fixed;
+    top: 3em;
+    bottom: 3em;
+    right: 20%;
+    left: 20%;
+    padding: 2em 3em;
+    background-color: white;
+    overflow: auto;
+}
+
+.modal-close {
+    position: absolute;
+    top: .3em;
+    right: .3em;
+    padding: .3em;
+    background-color: white;
+    cursor: pointer;
+    font-size: 2em;
+    height: 1em;
+    width: 1em;
+    text-indent: 10em;
+    overflow: hidden;
+    border: 0;
+}
+
+.modal-close::after {
+    position: absolute;
+    line-height: .5;
+    top: .2em;
+    left: .1em;
+    text-indent: 0;
+    content: "\00D7";
+}
+
+.modal-submit {
+    padding: .5em 1em;
+    border: 0;
+}
+
+.dropdown-container {
+    position: relative;
+}
+
+.dropdown.value-list {
+    border: none;
+    max-height: 100px;
+    width: 19%;
+    overflow-y: auto;
+    margin-top: 0;
+    background-color: #fff;
+    position: absolute;
+    top: 41.5px;
+    left: 90px;
+    z-index: 1;
+}
+
+.dropdown.value-list div {
+    margin-top: 0;
+    cursor: pointer;
+}
+    
+.dropdown.value-list div:hover {
+    background-color: #f0f0f0;
+}

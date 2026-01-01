@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from ...interfaces.view_models.base import ErrorViewModel
-from ...application.dtos.location_dtos import LocationResponse
-from ...interfaces.view_models.location_vm import LocationViewModel
+from src.interfaces.view_models.base import ErrorViewModel
+from src.application.dtos.location_dtos import LocationResponse
+from src.interfaces.view_models.location_vm import LocationViewModel
 
 
 class LocationPresenter(ABC):
@@ -28,7 +28,7 @@ class WebLocationPresenter(LocationPresenter):
         return LocationViewModel(
             id=location_response.id,
             name=location_response.name,
-            status=location_response.status,
+            status=location_response.status.capitalize(),
             street_address=location_response.street_address,
             city=location_response.city,
             state=location_response.state,

@@ -40,6 +40,7 @@ def create_dispatch_ready_to_start() -> Dispatch:
 
     return dispatch
 
+
 def create_dispatch_in_progress() -> tuple[Dispatch, Driver]:
     dispatch = create_dispatch_ready_to_start()
     driver = Driver('John')
@@ -47,6 +48,7 @@ def create_dispatch_in_progress() -> tuple[Dispatch, Driver]:
     Dispatcher.start_dispatch(dispatch, driver)
 
     return dispatch, driver
+
 
 def create_completed_dispatch() -> Dispatch:
     dispatch = create_dispatch_ready_to_start()

@@ -2,9 +2,9 @@
 Flask routes for Brokers.
 """
 
-from flask import render_template, request, redirect, url_for, current_app, flash
+from flask import jsonify, render_template, request, redirect, url_for, current_app, flash
 
-from ..broker import bp
+from src.infrastructure.web.routes.broker import bp
 
 
 @bp.route("/brokers")
@@ -19,6 +19,14 @@ def list_brokers():
     #     return redirect(url_for("todo.index"))
 
     return render_template("brokers/brokers.html", brokers=result.success)
+
+@bp.route("/api/brokers")
+def get_brokers():
+    app = current_app.config["APP_CONTAINER"]
+
+    result = app.broker_controller.handle_list()
+
+    return jsonify(result.success)
 
 
 @bp.route("/brokers/new", methods=["POST"])

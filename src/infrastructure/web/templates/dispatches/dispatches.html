@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block main_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dispatches/dispatches.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dispatches/_dispatch.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="container-subheading">
+      <h2>Dispatches</h2>
+      <button 
+      type="button"
+      class="modal-open js-modal-open" 
+      data-modal-target="#new-dispatch-modal">Create Dispatch</button>
+    </div>
+
+    {#<div class="dispatches-list-container">
+      {% for dispatch in dispatches %}
+        {% include 'dispatches/_dispatch.html' %}
+      {% endfor %}
+    </div>#}
+
+    <div class="modal js-modal hidden" id="new-dispatch-modal">
+      <div class="modal-backdrop"></div>
+      <div class="modal-body">
+        <button 
+        type="button"
+        class="modal-close js-modal-close" 
+        data-modal-target="#new-dispatch-modal">close</button>
+        <h2>Create Dispatch</h2>
+        <form id="dispatch-form" method="post" autocomplete="off">
+          <div class="form-broker">
+            Broker <input type="text" required>
+            <input type="hidden" name="broker_ref" value="">
+            <div class="dropdown hidden"></div>
+          </div>
+          <div class="form-driver">
+            Driver <input type="text">
+            <input type="hidden" name="driver_ref" value="">
+            <div class="dropdown hidden"></div>
+          </div>
+          <div class="form-containers">
+            <div class="form-container">
+              Container <input type="text" class="input-container" data-index="1" name="container_1">
+            </div>
+            <div><button type="button" id="add-container-btn">Add Container</button></div>
+          </div>
+          <div class="form-tasks">
+            <div class="form-task">
+              <h3>Stop</h3>
+              <input type="hidden" name="task_priority_1" value="1">
+              <div class="form-location">
+                Location <input type="text" value="TBD">
+                <input type="hidden" name="task_location_ref_1" value="">
+                <div class="dropdown hidden"></div>
+              </div>
+              <div class="form-instruction">
+                Task <select name="task_instruction_1" required>
+                  <option value="">Select</option>
+                  <option value="fetch_chassis">Fetch Chassis</option>
+                  <option value="prepull">Prepull</option>
+                  <option value="bobtail_to">Bobtail To</option>
+                  <option value="pickup_empty">Pickup Empty</option>
+                  <option value="drop_empty">Drop Empty</option>
+                  <option value="live_load">Live Load</option>
+                  <option value="pickup_loaded">Pickup Loaded</option>
+                  <option value="drop_loaded">Drop Loaded</option>
+                  <option value="live_unload">Live Unload</option>
+                  <option value="terminate_empty">Terminate Empty</option>
+                  <option value="terminate_chassis">Terminate Chassis</option>
+                  <option value="ingate">Ingate</option>
+                  <option value="yard_pull">Yard Pull</option>
+                  <option value="street_turn">Street Turn</option>
+                </select>
+              </div>
+              <div class="form-task-container">
+                Container <select name="task_container_1" class="container-dropdown">
+                  <option value="">Select</option>
+                  <option value="" data-index="1"></option>
+                  <option value="" data-index="2"></option>
+                  <option value="" data-index="3"></option>
+                </select>
+              </div>
+              <div class="form-date">
+                Date <input type="date" name="task_date_1" required>
+              </div>
+              <div class="form-appointment">
+                Appointment Type <select name="task_type_1">
+                  <option value="">Appt Type</option>
+                  <option value="open">Open</option>
+                  <option value="exact_time">Exact Time</option>
+                  <option value="time_window">Time Window</option>
+                  <option value="ready_after">Ready After</option>
+                  <option value="finish_before">Finish Before</option>
+                </select><br><br>
+                <span>Start <input type="time" name="task_start_time_1"></span>
+                <span>End <input type="time" name="task_end_time_1"></span>
+              </div>
+            </div>
+            <div class="form-task">
+              <h3>Stop</h3>
+              <input type="hidden" name="task_priority_2" value="2">
+              <div class="form-location">
+                Location <input type="text" value="TBD">
+                <input type="hidden" name="task_location_ref_2" value="">
+                <div class="dropdown hidden"></div>
+              </div>
+              <div class="form-instruction">
+                Task <select name="task_instruction_2" required>
+                  <option value="">Select</option>
+                  <option value="fetch_chassis">Fetch Chassis</option>
+                  <option value="prepull">Prepull</option>
+                  <option value="bobtail_to">Bobtail To</option>
+                  <option value="pickup_empty">Pickup Empty</option>
+                  <option value="drop_empty">Drop Empty</option>
+                  <option value="live_load">Live Load</option>
+                  <option value="pickup_loaded">Pickup Loaded</option>
+                  <option value="drop_loaded">Drop Loaded</option>
+                  <option value="live_unload">Live Unload</option>
+                  <option value="terminate_empty">Terminate Empty</option>
+                  <option value="terminate_chassis">Terminate Chassis</option>
+                  <option value="ingate">Ingate</option>
+                  <option value="yard_pull">Yard Pull</option>
+                  <option value="street_turn">Street Turn</option>
+                </select>
+              </div>
+              <div class="form-task-container">
+                Container <select name="task_container_2" class="container-dropdown">
+                  <option value="">Select</option>
+                  <option value="" data-index="1"></option>
+                  <option value="" data-index="2"></option>
+                  <option value="" data-index="3"></option>
+                </select>
+              </div>
+              <div class="form-date">
+                Date <input type="date" name="task_date_2" required>
+              </div>
+              <div class="form-appointment">
+                Appointment Type <select name="task_type_2">
+                  <option value="">Appt Type</option>
+                  <option value="open">Open</option>
+                  <option value="exact_time">Exact Time</option>
+                  <option value="time_window">Time Window</option>
+                  <option value="ready_after">Ready After</option>
+                  <option value="finish_before">Finish Before</option>
+                </select><br><br>
+                <span>Start <input type="time" name="task_start_time_2"></span>
+                <span>End <input type="time" name="task_end_time_2"></span>
+              </div>
+            </div>
+            <div>
+              <button type="button" id="add-task-btn">Add Task</button>
+            </div>
+          </div>
+          <p><button type="submit" class="modal-submit">Submit</button></p>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+  <script type="module" src="../../static/scripts/dispatches.js"></script>
+{% endblock %}

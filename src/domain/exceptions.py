@@ -13,7 +13,7 @@ class DomainError(Exception):
 
 
 class BrokerNotFoundError(DomainError):
-    """Raised when attempting to access a task that doesn't exist."""
+    """Raised when attempting to access a broker that doesn't exist."""
 
     def __init__(self, broker_id: UUID) -> None:
         self.broker_id = broker_id
@@ -21,11 +21,27 @@ class BrokerNotFoundError(DomainError):
 
 
 class LocationNotFoundError(DomainError):
-    """Raised when attempting to access a task that doesn't exist."""
+    """Raised when attempting to access a location that doesn't exist."""
 
     def __init__(self, location_id: UUID) -> None:
         self.location_id = location_id
         super().__init__(f"Location with id {location_id} not found")
+
+
+class DriverNotFoundError(DomainError):
+    """Raised when attempting to access a driver that doesn't exist."""
+
+    def __init__(self, driver_id: UUID) -> None:
+        self.driver_id = driver_id
+        super().__init__(f"Driver with id {driver_id} not found")
+
+
+class DispatchNotFoundError(DomainError):
+    """Raised when attempting to access a dispatch that doesn't exist."""
+
+    def __init__(self, dispatch_id: UUID) -> None:
+        self.dispatch_id = dispatch_id
+        super().__init__(f"Driver with id {dispatch_id} not found")
 
 
 class ValidationError(DomainError):

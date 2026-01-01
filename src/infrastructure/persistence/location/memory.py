@@ -2,9 +2,10 @@ from typing import Dict, Sequence
 from uuid import UUID
 from logging import getLogger
 
-from ....application.repositories.location_repository import LocationRepository
-from ....domain.aggregates.location.aggregate import Location
-from ....domain.exceptions import LocationNotFoundError
+from src.application.repositories.location_repository import LocationRepository
+from src.domain.aggregates.location.aggregate import Location
+from src.domain.exceptions import LocationNotFoundError
+
 
 logger = getLogger(__name__)
 
@@ -31,7 +32,7 @@ class InMemoryLocationRepository(LocationRepository):
         if location := self._locations.get(location_id):
             return location
         raise LocationNotFoundError(location_id)
-
+    
     def save(self, location: Location) -> None:
         """
         Save a location.
