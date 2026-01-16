@@ -14,6 +14,38 @@ from src.domain.exceptions import ValidationError, BusinessRuleViolation
 
 
 @dataclass
+class CreateBrokerUseCase:
+    """Use case for creating a new broker."""
+
+    broker_repository: BrokerRepository
+
+    def execute(self, request: CreateBrokerRequest) -> Result:
+        """Execute the use case."""
+        try:
+            params = request.to_execution_params()
+
+            if self.broker_repository.get_by_name(params['name']):
+                raise BusinessRuleViolation('A broker with that name already exists.')
+            
+            if self.broker_repository.get_by_address(params['address']):
+                raise BusinessRuleViolation('A broker with that address already exists.')
+
+            broker = Broker(
+                name=params['name'],
+                address=params['address'],
+            )
+
+            self.broker_repository.save(broker)
+
+            return Result.success(BrokerResponse.from_entity(broker))
+
+        except ValidationError as e:
+            return Result.failure(Error.validation_error(str(e)))
+        except BusinessRuleViolation as e:
+            return Result.failure(Error.business_rule_violation(str(e)))
+        
+
+@dataclass
 class ListBrokersUseCase:
     broker_repository: BrokerRepository
 
@@ -31,32 +63,7 @@ class ListBrokersUseCase:
             return Result.success([BrokerResponse.from_entity(b) for b in brokers])
         except BusinessRuleViolation as e:
             return Result.failure(Error.business_rule_violation(str(e)))
-        
 
-@dataclass
-class CreateBrokerUseCase:
-    """Use case for creating a new broker."""
-
-    broker_repository: BrokerRepository
-
-    def execute(self, request: CreateBrokerRequest) -> Result:
-        """Execute the use case."""
-        try:
-            params = request.to_execution_params()
-
-            broker = Broker(
-                name=params['name'],
-                address=params['address'],
-            )
-
-            self.broker_repository.save(broker)
-
-            return Result.success(BrokerResponse.from_entity(broker))
-
-        except ValidationError as e:
-            return Result.failure(Error.validation_error(str(e)))
-        except BusinessRuleViolation as e:
-            return Result.failure(Error.business_rule_violation(str(e)))
         
 @dataclass
 class DeactivateBrokerUseCase:
@@ -72,6 +79,8 @@ class DeactivateBrokerUseCase:
             broker = self.broker_repository.get(params['id'])
 
             broker.deactivate()
+
+            self.broker_repository.save(broker)
 
             return Result.success(BrokerResponse.from_entity(broker))
 
@@ -95,6 +104,8 @@ class ActivateBrokerUseCase:
 
             broker.reactivate()
 
+            self.broker_repository.save(broker)
+
             return Result.success(BrokerResponse.from_entity(broker))
 
         except ValidationError as e:
@@ -114,12 +125,20 @@ class EditBrokerUseCase:
         try:
             params = request.to_execution_params()
 
+            if self.broker_repository.get_by_name(params['name'], params['id']):
+                raise BusinessRuleViolation('A broker with that name already exists.')
+            
+            if self.broker_repository.get_by_address(params['address'], params['id']):
+                raise BusinessRuleViolation('A broker with that address already exists.')
+
             id = params["id"]
 
             broker = self.broker_repository.get(id)
 
             broker.name = params["name"]
             broker.address = params["address"]
+
+            self.broker_repository.save(broker)
 
             return Result.success(BrokerResponse.from_entity(broker))
 
@@ -130,28 +149,22 @@ class EditBrokerUseCase:
 
 
 @dataclass
-class GetBrokerUseCase:
+class ActiveBrokersUseCase:
     """Use case for creating a new broker."""
 
     broker_repository: BrokerRepository
 
-    def execute(self, request) -> Result:
+    def execute(self) -> Result:
         """Execute the use case."""
         try:
-            params = request.to_execution_params()
 
-            broker = Broker(
-                name=params['name'],
-                address=params['address'],
-            )
+            brokers = self.broker_repository.get_active_brokers()
 
-            self.broker_repository.save(broker)
+            print("ACTIVE BROKERS", brokers)
 
-            return Result.success(BrokerResponse.from_entity(broker))
+            return Result.success([BrokerResponse.from_entity(b) for b in brokers])
 
         except ValidationError as e:
             return Result.failure(Error.validation_error(str(e)))
         except BusinessRuleViolation as e:
             return Result.failure(Error.business_rule_violation(str(e)))
-        
-

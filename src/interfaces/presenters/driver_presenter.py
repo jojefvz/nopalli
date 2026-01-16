@@ -28,7 +28,7 @@ class WebDriverPresenter(DriverPresenter):
         return DriverViewModel(
             id=driver_response.id,
             name=driver_response.name,
-            status=driver_response.status,
+            status=driver_response.status.capitalize(),
         )
 
     def present_error(self, error_msg: str, code: Optional[str] = None) -> ErrorViewModel:

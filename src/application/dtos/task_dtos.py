@@ -1,22 +1,27 @@
 from dataclasses import dataclass
-from datetime import date
+import datetime
 from typing import Optional, Self
-from uuid import UUID
 
 from src.domain.aggregates.dispatch.entities import Task
 from src.domain.aggregates.dispatch.value_objects import Appointment, Container, Instruction, TaskStatus
+from src.domain.aggregates.location.aggregate import Location
+
+
+@dataclass(frozen=True)
+class CreateTaskRequest:
+    pass
 
 
 @dataclass(frozen=True)
 class TaskResponse:
     id: str
+    priority: int
     status: TaskStatus
-    priority: str
     instruction: Instruction
-    date: date
-    container: Optional[Container] = None
-    location_ref: Optional[str] = None
-    appointment: Optional[Appointment] = None
+    date: datetime.date
+    location: Optional[Location]
+    container: Optional[Container]
+    appointment: Optional[Appointment]
 
     @classmethod
     def from_entity(cls, task: Task) -> Self:
@@ -26,7 +31,7 @@ class TaskResponse:
             priority=task.priority,
             instruction=task.instruction,
             date=task.date,
+            location=task.location,
             container=task.container,
-            location_ref=task.location_ref,
             appointment=task.appointment
         )

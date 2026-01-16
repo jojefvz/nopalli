@@ -17,6 +17,7 @@ Key Clean Architecture benefits demonstrated in these controllers:
 
 from dataclasses import dataclass
 
+from src.domain.exceptions import ValidationError
 from src.interfaces.presenters.broker_presenter import BrokerPresenter
 from src.interfaces.view_models.broker_vm import BrokerViewModel
 from src.interfaces.view_models.base import OperationResult
@@ -31,7 +32,8 @@ from src.application.use_cases.broker_use_cases import (
     CreateBrokerUseCase,
     DeactivateBrokerUseCase,
     ActivateBrokerUseCase,
-    EditBrokerUseCase
+    EditBrokerUseCase,
+    ActiveBrokersUseCase
 )
 
 
@@ -61,17 +63,8 @@ class BrokerController:
     deactivate_use_case: DeactivateBrokerUseCase
     activate_use_case: ActivateBrokerUseCase
     edit_use_case: EditBrokerUseCase
+    active_brokers_use_case: ActiveBrokersUseCase
     presenter: BrokerPresenter
-
-    def handle_list(self) -> OperationResult[list[BrokerViewModel]]:
-        result = self.list_use_case.execute()
-
-        if result.is_success:
-            view_models = [self.presenter.present_broker(proj) for proj in result.value]
-            return OperationResult.succeed(view_models)
-
-        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
-        return OperationResult.fail(error_vm.message, error_vm.code)
 
     def handle_create(
             self,
@@ -126,57 +119,21 @@ class BrokerController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
 
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
 
-    def handle_deactivate(
-            self,
-            id: str
-            ) -> OperationResult[BrokerViewModel]:
-        try:
-            request = DeactivateBrokerRequest(id)
+    def handle_list(self) -> OperationResult[list[BrokerViewModel]]:
+        result = self.list_use_case.execute()
 
-            result = self.deactivate_use_case.execute(request)
+        if result.is_success:
+            view_models = [self.presenter.present_broker(broker) for broker in result.value]
+            return OperationResult.succeed(view_models)
 
-            if result.is_success:
-                view_model = self.presenter.present_broker(result.value)
-                return OperationResult.succeed(view_model)
-            
-            error_vm = self.presenter.present_error(
-                result.error.message, str(result.error.code.name)
-            )
-            return OperationResult.fail(error_vm.message, error_vm.code)
-        
-        except ValueError as e:
-            # Handle validation errors
-            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
-            return OperationResult.fail(error_vm.message, error_vm.code)
-        
-    def handle_activate(
-            self,
-            id: str
-            ) -> OperationResult[BrokerViewModel]:
-        try:
-            request = ActivateBrokerRequest(id)
-
-            result = self.activate_use_case.execute(request)
-
-            if result.is_success:
-                view_model = self.presenter.present_broker(result.value)
-                return OperationResult.succeed(view_model)
-            
-            error_vm = self.presenter.present_error(
-                result.error.message, str(result.error.code.name)
-            )
-            return OperationResult.fail(error_vm.message, error_vm.code)
-        
-        except ValueError as e:
-            # Handle validation errors
-            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
-            return OperationResult.fail(error_vm.message, error_vm.code)
-
+        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
+        return OperationResult.fail(error_vm.message, error_vm.code)
+    
     def handle_edit(
             self,
             id: str,
@@ -214,7 +171,63 @@ class BrokerController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
 
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
+
+    def handle_deactivate(
+            self,
+            id: str
+            ) -> OperationResult[BrokerViewModel]:
+        try:
+            request = DeactivateBrokerRequest(id)
+
+            result = self.deactivate_use_case.execute(request)
+
+            if result.is_success:
+                view_model = self.presenter.present_broker(result.value)
+                return OperationResult.succeed(view_model)
+            
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+    def handle_activate(
+            self,
+            id: str
+            ) -> OperationResult[BrokerViewModel]:
+        try:
+            request = ActivateBrokerRequest(id)
+
+            result = self.activate_use_case.execute(request)
+
+            if result.is_success:
+                view_model = self.presenter.present_broker(result.value)
+                return OperationResult.succeed(view_model)
+            
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+    def handle_active_brokers(self) -> OperationResult[list[BrokerViewModel]]:
+        result = self.active_brokers_use_case.execute()
+
+        if result.is_success:
+            view_models = [self.presenter.present_broker(broker) for broker in result.value]
+            return OperationResult.succeed(view_models)
+
+        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
+        return OperationResult.fail(error_vm.message, error_vm.code)

@@ -1,45 +1,50 @@
 from src.domain.aggregates.driver.value_objects import DriverStatus
 from src.domain.common.entity import AggregateRoot
+from src.domain.exceptions import BusinessRuleViolation
 
 
 class Driver(AggregateRoot):
     def __init__(self, name):
         super().__init__()
-        self.status = DriverStatus.AVAILABLE
+        self._status = DriverStatus.AVAILABLE
         self.name = name
+
+    @property
+    def status(self) -> DriverStatus:
+        return self._status
 
     def begin_operating(self) -> None:
         if self.status != DriverStatus.AVAILABLE:
-            raise ValueError('Only available drivers can begin operating.')
+            raise BusinessRuleViolation('Only available drivers can begin operating.')
         
-        self.status = DriverStatus.OPERATING
+        self._status = DriverStatus.OPERATING
 
     def release(self) -> None:
         if self.status != DriverStatus.OPERATING:
-            raise ValueError('Only operating drivers can be released.')
+            raise BusinessRuleViolation('Only operating drivers can be released.')
         
-        self.status = DriverStatus.AVAILABLE
+        self._status = DriverStatus.AVAILABLE
 
     def sit_out(self) -> None:
         if self.status != DriverStatus.AVAILABLE:
-            raise ValueError('Only available drivers can sit out.')
+            raise BusinessRuleViolation('Only available drivers can sit out.')
         
-        self.status = DriverStatus.UNAVAILABLE
+        self._status = DriverStatus.UNAVAILABLE
 
     def make_available(self) -> None:
         if self.status != DriverStatus.UNAVAILABLE:
-            raise ValueError('Only unavailable drivers can be made available.')
+            raise BusinessRuleViolation('Only unavailable drivers can be made available.')
         
-        self.status = DriverStatus.AVAILABLE
+        self._status = DriverStatus.AVAILABLE
 
     def deactivate(self) -> None:
         if self.status not in (DriverStatus.UNAVAILABLE, DriverStatus.AVAILABLE):
-            raise ValueError('Only available and unavailable drivers can be deactivated.')
+            raise BusinessRuleViolation('Only available and unavailable drivers can be deactivated.')
     
-        self.status = DriverStatus.DEACTIVATED
+        self._status = DriverStatus.DEACTIVATED
 
     def reactivate(self) -> None:
         if self.status != DriverStatus.DEACTIVATED:
-            raise ValueError('Only deactivated drivers can be reactivated.')
+            raise BusinessRuleViolation('Only deactivated drivers can be reactivated.')
         
-        self.status = DriverStatus.AVAILABLE
+        self._status = DriverStatus.AVAILABLE

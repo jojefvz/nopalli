@@ -1,75 +1,232 @@
 {% extends "base.html" %}
 
 {% block main_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/drivers/drivers.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/drivers/_driver.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/containers.css') }}">
 {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <div class="container-subheading">
-      <h2>Drivers</h2>
-      <button class="modal-open" href="#new-driver-modal">Add Driver</button>
-    </div>
-
-    <div class="drivers-list-container">
-      {% for driver in drivers %}
-        {% include 'drivers/_driver.html' %}
-      {% endfor %}
-    </div>
-
-    <div class="modal" id="new-driver-modal">
-      <div class="modal-backdrop"></div>
-      <div class="modal-body">
-        <button class="modal-close" href="#new-driver-modal">close</button>
+<div class="container" data-page="drivers">
+  <div class="container-header">
+    <h2>Drivers</h2>
+    <button 
+    type="button" 
+    class="btn"
+    @click="newDriverModal = true">New Driver</button>
+  </div>
+  
+  <!-- New Driver Modal (unchanged) -->
+  <div v-if="newDriverModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
         <h2>Add New Driver</h2>
-        <form action="{{ url_for('driver.new_driver') }}" method="post">
-          <p>
+        <button 
+        type="button" 
+        class="close-btn"
+        @click="newDriverModal = false">×</button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('driver.create_driver') }}" method="post">
+          <div class="form-field">
             <label for="name">Driver Name</label>
-            <input type="text" id="name" name="name" required>
+            <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            minlength="2"
+            maxlength="100"
+            required>
+          </div>
+          <div class="form-field">
+            <button type="submit">Submit</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+  
+  <!-- Driver List -->
+  <div class="container-content">
+    <div v-for="driver in drivers" :key="driver.id" class="object-container">
+      <div class="object-details">
+        <h3>[[ driver.name ]] ([[ driver.status ]])</h3>
+        <button @click="openEditModal(driver)">Edit</button>
+      </div>
+      
+      <div 
+      v-if="['Available','Unavailable'].includes(driver.status)" 
+      type="button" 
+      class="status-btns-container">
+        <button @click="openAvailableModal(driver)">
+          [[ driver.status === 'Available' ? 'Sit Out' : 'Make Available']]
+        </button>
+        <button @click="openActivateModal(driver)">Deactivate</button>
+      </div>
+      <button v-else-if="driver.status === 'Deactivated'" type="button" @click="openActivateModal(driver)">
+        Activate
+      </button>
+    </div>
+  </div>
+  
+  <!-- SINGLE Edit Modal - reused for all drivers -->
+  <div v-if="selectedDriver && editModalOpen" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Driver</h2>
+        <button class="close-btn" @click="closeEditModal">×</button>
+      </div>
+      <div class="modal-body">
+        <form :action="`drivers/${selectedDriver.id}/edit`" method="post">
+          <div class="form-field">
+            <label for="name">Driver Name</label>
+            <input 
+              type="text" 
+              name="name" 
+              :value="selectedDriver.name" 
+              required>
+          </div>
+          <div class="form-field">
+            <button type="submit" class="modal-submit">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- SINGLE Activate/Deactivate Modal - reused for all drivers -->
+  <div v-if="selectedDriver && activateModalOpen" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>[[ ['Available', 'Unavailable'].includes(selectedDriver.status) ? 'Deactivating' : 'Activating' ]]: [[ selectedDriver.name ]]</h2>
+        <button class="close-btn" @click="closeActivateModal">×</button>
+      </div>
+      <div class="modal-body">
+        <form 
+        method="post"
+        :action="activationActionUrl">
+          <p v-if="['Available', 'Unavailable'].includes(selectedDriver.status)">
+            Are you sure you would like to deactivate this driver?
+            Driver will no longer be available for selection.
           </p>
-          <p><button type="submit" class="modal-submit">Submit</button></p>
+          <p v-else-if="selectedDriver.status === 'Deactivated'">
+            Are you sure you would like to activate this driver?
+            Driver will be available for driver selection.
+          </p>
+          <p>
+            <button type="submit">
+              [[ ['Available', 'Unavailable'].includes(selectedDriver.status) ? 'Deactivate' : 'Activate' ]]
+            </button>
+          </p>
         </form>
       </div>
     </div>
   </div>
 
-  <script type="text/javascript">
-    let open_btns = document.querySelectorAll('button.modal-open');
-    let close_btns = document.querySelectorAll('button.modal-close');
-    let modals = document.querySelectorAll('.modal')
+  <!-- SINGLE Make Available/Sit Out Modal - reused for all drivers -->
+  <div v-if="selectedDriver && availableModalOpen" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>[[ selectedDriver.status === 'Available' ? 'Sitting Out' : 'Making Avaiable' ]]: [[ selectedDriver.name ]]</h2>
+        <button class="close-btn" @click="closeAvailableModal">×</button>
+      </div>
+      <div class="modal-body">
+        <form 
+        method="post"
+        :action="availableActionUrl">
+          <p v-if="selectedDriver.status === 'Available'">
+            Are you sure you would like to sit out this driver?
+            Driver will no longer be available for selection.
+          </p>
+          <p v-else-if="selectedDriver.status === 'Unavailable'">
+            Are you sure you would like to make this driver available?
+            Driver will be available for driver selection.
+          </p>
+          <p>
+            <button type="submit">
+              [[ selectedDriver.status === 'Available' ? 'Sit Out' : 'Make Avaiable' ]]
+            </button>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
-    for (let i = 0; i < open_btns.length; i++) {
-        open_btns[i].onclick = function (event) {
-          event.preventDefault();
-          modal = document.querySelector(event.target.getAttribute("href"));
-          modal.style.display = 'block';
-        };
-    }
-    
-    for (let i = 0; i < close_btns.length; i++) {
-        close_btns[i].onclick = function (event) {
-          event.preventDefault();
-          modal = document.querySelector(event.target.getAttribute("href"));
-          modal.style.display = 'none';
-        };
-    }
-
-    window.addEventListener('click', (e) => {
-      console.log(e);
-      if (e.target.classList.contains('modal-backdrop')) {
-        modals.forEach(m => m.style.display = 'none');
+{% block scripts %}
+<script> 
+  createApp({
+    delimiters: ['[[', ']]'],
+    data() {
+      return {
+        newDriverModal: false,
+        editModalOpen: false,
+        activateModalOpen: false,
+        availableModalOpen: false,
+        selectedDriver: null,  // Stores the currently selected driver
+        drivers: [
+          {% for driver in drivers %}
+            {
+              id: "{{ driver.id }}",
+              name: "{{ driver.name }}",
+              status: "{{ driver.status }}",
+            }{{ "," if not loop.last }}
+          {% endfor %}
+        ]
       }
-    });
-
-    fetch('/api/drivers')
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {console.log("Fetched drivers:", data)})
-      .catch((err) => {console.error("Fetch error:", err)});
-  </script>
+    },
+    methods: {
+      openEditModal(driver) {
+        this.selectedDriver = driver;
+        this.editModalOpen = true;
+      },
+      closeEditModal() {
+        this.editModalOpen = false;
+        this.selectedDriver = null;
+      },
+      openActivateModal(driver) {
+        this.selectedDriver = driver;
+        this.activateModalOpen = true;
+      },
+      closeActivateModal() {
+        this.activateModalOpen = false;
+        this.selectedDriver = null;
+      },
+      openAvailableModal(driver) {
+        this.selectedDriver = driver;
+        this.availableModalOpen = true;
+      },
+      closeAvailableModal() {
+        this.availableModalOpen = false;
+        this.selectedDriver = null;
+      }
+    },
+    computed: {
+      activationActionUrl() {
+        if (!this.selectedDriver) return '';
+        
+        const activateBaseUrl = '{{ url_for("driver.activate", id=0) }}';
+        const deactivateBaseUrl = '{{ url_for("driver.deactivate", id=0) }}';
+        
+        const activateUrl = activateBaseUrl.replace('/0', '/' + this.selectedDriver.id);
+        const deactivateUrl = deactivateBaseUrl.replace('/0', '/' + this.selectedDriver.id);
+        
+        return ['Available', 'Unavailable'].includes(this.selectedDriver.status) ? deactivateUrl : activateUrl;
+      },
+      availableActionUrl() {
+        if (!this.selectedDriver) return '';
+        
+        const availableBaseUrl = '{{ url_for("driver.make_available", id=0) }}';
+        const sitOutBaseUrl = '{{ url_for("driver.sit_out", id=0) }}';
+        
+        const availableUrl = availableBaseUrl.replace('/0', '/' + this.selectedDriver.id);
+        const sitOutUrl = sitOutBaseUrl.replace('/0', '/' + this.selectedDriver.id);
+        
+        return this.selectedDriver.status === 'Available' ? sitOutUrl : availableUrl;
+      }
+    }
+  }).mount('[data-page="drivers"]');
+</script>
 {% endblock %}

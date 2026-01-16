@@ -17,23 +17,21 @@ Key Clean Architecture benefits demonstrated in these controllers:
 
 from dataclasses import dataclass
 
-from src.application.dtos.dispatch_dtos import (
-    CreateDispatchRequest,
-    )
-from src.application.use_cases.dispatch_use_cases import (
-    CreateDispatchUseCase,
-    ListDispatchesUseCase,
-)
-from src.domain.exceptions import ValidationError
-from src.interfaces.presenters.dispatch_presenter import DispatchPresenter
-from src.interfaces.view_models.dispatch_vm import DispatchViewModel
+from src.interfaces.presenters.task_presenter import TaskPresenter
+from src.interfaces.view_models.task_vm import TaskViewModel
 from src.interfaces.view_models.base import OperationResult
+from src.application.dtos.task_dtos import (
+    CreateTaskRequest,
+    )
+from src.application.use_cases.task_use_cases import (
+    CreateTaskUseCase,
+)
 
 
 @dataclass
-class DispatchController:
+class TaskController:
     """
-    Controller for dispatch-related operations, demonstrating Clean Architecture principles.
+    Controller for task-related operations, demonstrating Clean Architecture principles.
 
     This controller adheres to Clean Architecture by:
     - Depending only on abstractions (use cases and presenters)
@@ -47,19 +45,18 @@ class DispatchController:
     - Modification of presentation logic without affecting core functionality
 
     Attributes:
-        create_use_case: Use case for creating dispatchs
-        presenter: Handles formatting of dispatch data for the interface
+        create_use_case: Use case for creating tasks
+        presenter: Handles formatting of task data for the interface
     """
 
-    create_use_case: CreateDispatchUseCase
-    list_use_case: ListDispatchesUseCase
-    presenter: DispatchPresenter
+    create_use_case: CreateTaskUseCase
+    presenter: TaskPresenter
 
-    # def handle_list(self) -> OperationResult[list[DispatchViewModel]]:
+    # def handle_list(self) -> OperationResult[list[TaskViewModel]]:
     #     result = self.list_use_case.execute()
 
     #     if result.is_success:
-    #         view_models = [self.presenter.present_dispatch(d) for d in result.value]
+    #         view_models = [self.presenter.present_task(d) for d in result.value]
     #         return OperationResult.succeed(view_models)
 
     #     error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
@@ -67,12 +64,13 @@ class DispatchController:
 
     def handle_create(
             self,
-            broker_id: str,
-            driver_id: str,
+            broker_ref: str,
+            driver_ref: str,
+            containers: list[str],
             plan: list[dict]
-        ) -> OperationResult[DispatchViewModel]:
+        ) -> OperationResult[TaskViewModel]:
         """
-        Handle dispatch creation requests from any interface.
+        Handle task creation requests from any interface.
 
         This method demonstrates Clean Architecture's separation of concerns by:
         1. Accepting primitive types as input (making it interface-agnostic)
@@ -81,12 +79,12 @@ class DispatchController:
         4. Using a presenter to format the response appropriately
 
         Args:
-            title: The dispatch title
-            description: The dispatch description
+            title: The task title
+            description: The task description
 
         Returns:
             OperationResult containing either:
-            - Success: DispatchViewModel formatted for the interface
+            - Success: TaskViewModel formatted for the interface
             - Failure: Error information formatted for the interface
         """
         try:
@@ -94,9 +92,10 @@ class DispatchController:
             # Interface->Application boundary crossing
             # It contains validation specific to application needs
             # Ensures data entering the application layer is properly formatted and validated
-            request = CreateDispatchRequest(
-                broker_id=broker_id,
-                driver_id=driver_id,
+            request = CreateTaskRequest(
+                broker_ref=broker_ref,
+                driver_ref=driver_ref,
+                containers=containers,
                 plan=plan
                 )
 
@@ -105,7 +104,7 @@ class DispatchController:
 
             if result.is_success:
                 # Convert domain response to view model
-                view_model = self.presenter.present_dispatch(result.value)
+                view_model = self.presenter.present_task(result.value)
                 return OperationResult.succeed(view_model)
 
             # Handle domain errors
@@ -114,33 +113,7 @@ class DispatchController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
 
-        except ValidationError as e:
-            # Handle validation errors
-            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
-            return OperationResult.fail(error_vm.message, error_vm.code)
-
-    def handle_list(self) -> OperationResult[list[DispatchViewModel]]:
-        try:
-            # Convert primitive input to use case request model specifically designed for the
-            # Interface->Application boundary crossing
-            # It contains validation specific to application needs
-            # Ensures data entering the application layer is properly formatted and validated
-
-            # Execute use case and get domain-oriented result
-            result = self.list_use_case.execute()
-
-            if result.is_success:
-                # Convert domain response to view model
-                view_models = [self.presenter.present_dispatch(disp) for disp in result.value]
-                return OperationResult.succeed(view_models)
-
-            # Handle domain errors
-            error_vm = self.presenter.present_error(
-                result.error.message, str(result.error.code.name)
-            )
-            return OperationResult.fail(error_vm.message, error_vm.code)
-
-        except ValidationError as e:
+        except ValueError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)

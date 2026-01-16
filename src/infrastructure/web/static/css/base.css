@@ -10,87 +10,88 @@
 
 body {
     font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 1.2em;
 }
+
 body * + * {
     margin-top: 1.5em;
 }
 
-.site-nav {
+.navbar {
     display: flex;
     margin: 0;
     background-color: #f4f4f4;
     list-style-type: none;
 }
 
-.site-nav > li {
+.navbar > li {
     margin-top: 0;
 }
 
-.site-nav > li > a {
+.navbar > li > a {
     display: block;
     padding: .5em 1em;
     text-decoration: none;
 }
 
-.site-nav > li + li {
+.navbar > li + li {
     margin-left: 1em;
 }
 
-.dropdown.nav {
-      display: inline-block;
-      position: relative;
-      margin-top: 0;
-      padding: .5em 1em;
+.dropdown {
+  position: relative;
 }
 
-.dropdown-label.nav {
-    padding-right: 1em;
+.dropdown-toggle {
+  font-size: 1em;
+  cursor: pointer;
+  border: none;
+  padding: .5em 1em;
+  display: flex;
+  align-items: center;
+  gap: .5em;
+  background: none;
 }
 
-.dropdown-label.nav::after {
-    content: "";
-    position: absolute;
-    right: 1em;
-    top: 1em;
-    border: 0.3em solid;
-    border-color: black transparent transparent;
-}
-.dropdown.nav:hover .dropdown-label.nav::after {
-    top: 0.7em;
-    border-color: transparent transparent black;
+.dropdown-arrow {
+  margin: 0;
+  font-size: .75em;
+  transition: transform .2s;
 }
 
-.dropdown-menu.nav {
-    display: none;
-    position: absolute;
-    left: 0;
-    top: .95em;
-    margin-top: 1.2em;
-    min-width: 100%;
-    background-color: #eee;
-}
-.dropdown.nav:hover .dropdown-menu.nav {
-    display: block;
+.dropdown-arrow.open {
+  transform: rotate(180deg);
 }
 
-.submenu {
-    padding-left: 0;
-    margin: 0;
-    list-style-type: none;
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0em;
+  background-color: white;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+
 }
 
-.submenu > li + li {
-    margin-top: 0;
+.dropdown-item {
+  display: block;
+  text-decoration: none;
+  margin: 0;
+  padding: .5em .5em;
+  color: black;
+  transition: background .2s;
 }
 
-.submenu > li > a {
-    display: block;
-    padding: .5em 1em;
-    background-color: #eee;
-    color: #369;
-    text-decoration: none;
+.dropdown-item:hover {
+  background: #f3f4f6;
 }
 
-.submenu > li > a:hover {
-    background-color: #fff;
+.base-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

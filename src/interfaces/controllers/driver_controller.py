@@ -17,6 +17,7 @@ Key Clean Architecture benefits demonstrated in these controllers:
 
 from dataclasses import dataclass
 
+from src.domain.exceptions import ValidationError
 from src.interfaces.presenters.driver_presenter import DriverPresenter
 from src.interfaces.view_models.driver_vm import DriverViewModel
 from src.interfaces.view_models.base import OperationResult
@@ -24,14 +25,19 @@ from src.application.dtos.driver_dtos import (
     CreateDriverRequest,
     DeactivateDriverRequest,
     ActivateDriverRequest,
-    EditDriverRequest
+    EditDriverRequest,
+    MakeAvailableDriverRequest,
+    SitOutDriverRequest
     )
 from src.application.use_cases.driver_use_cases import (
     ListDriversUseCase,
     CreateDriverUseCase,
     DeactivateDriverUseCase,
     ActivateDriverUseCase,
-    EditDriverUseCase
+    EditDriverUseCase,
+    MakeAvailableDriverUseCase,
+    SitOutDriverUseCase,
+    AvailableAndOperatingDriversUseCase
 )
 
 
@@ -58,20 +64,13 @@ class DriverController:
 
     list_use_case: ListDriversUseCase
     create_use_case: CreateDriverUseCase
+    sit_out_use_case: SitOutDriverUseCase
+    make_available_use_case: MakeAvailableDriverUseCase
     deactivate_use_case: DeactivateDriverUseCase
     activate_use_case: ActivateDriverUseCase
     edit_use_case: EditDriverUseCase
+    available_and_operating_drivers_use_case: AvailableAndOperatingDriversUseCase
     presenter: DriverPresenter
-
-    def handle_list(self) -> OperationResult[list[DriverViewModel]]:
-        result = self.list_use_case.execute()
-
-        if result.is_success:
-            view_models = [self.presenter.present_driver(driver) for driver in result.value]
-            return OperationResult.succeed(view_models)
-
-        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
-        return OperationResult.fail(error_vm.message, error_vm.code)
 
     def handle_create(
             self,
@@ -116,11 +115,101 @@ class DriverController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
 
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
 
+    def handle_list(self) -> OperationResult[list[DriverViewModel]]:
+        result = self.list_use_case.execute()
+
+        if result.is_success:
+            view_models = [self.presenter.present_driver(driver) for driver in result.value]
+            return OperationResult.succeed(view_models)
+
+        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
+        return OperationResult.fail(error_vm.message, error_vm.code)
+    
+    def handle_edit(
+            self,
+            id: str,
+            name: str
+        ) -> OperationResult[DriverViewModel]:
+        try:
+            # Convert primitive input to use case request model specifically designed for the
+            # Interface->Application boundary crossing
+            # It contains validation specific to application needs
+            # Ensures data entering the application layer is properly formatted and validated
+            request = EditDriverRequest(
+                id=id,
+                name=name
+            )
+
+            # Execute use case and get domain-oriented result
+            result = self.edit_use_case.execute(request)
+
+            if result.is_success:
+                # Convert domain response to view model
+                view_model = self.presenter.present_driver(result.value)
+                return OperationResult.succeed(view_model)
+
+            # Handle domain errors
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+    def handle_sit_out(
+            self,
+            id: str
+            ) -> OperationResult[DriverViewModel]:
+        try:
+            request = SitOutDriverRequest(id)
+
+            result = self.sit_out_use_case.execute(request)
+
+            if result.is_success:
+                view_model = self.presenter.present_driver(result.value)
+                return OperationResult.succeed(view_model)
+            
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+    def handle_make_available(
+            self,
+            id: str
+            ) -> OperationResult[DriverViewModel]:
+        try:
+            request = MakeAvailableDriverRequest(id)
+
+            result = self.make_available_use_case.execute(request)
+
+            if result.is_success:
+                view_model = self.presenter.present_driver(result.value)
+                return OperationResult.succeed(view_model)
+            
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+    
     def handle_deactivate(
             self,
             id: str
@@ -139,7 +228,7 @@ class DriverController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
         
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
@@ -162,41 +251,17 @@ class DriverController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
         
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
 
-    def handle_edit(
-            self,
-            id: str,
-            name: str
-        ) -> OperationResult[DriverViewModel]:
-        try:
-            # Convert primitive input to use case request model specifically designed for the
-            # Interface->Application boundary crossing
-            # It contains validation specific to application needs
-            # Ensures data entering the application layer is properly formatted and validated
-            request = EditDriverRequest(
-                id=id,
-                name=name
-                )
+    def handle_available_and_operating_drivers(self) -> OperationResult[list[DriverViewModel]]:
+        result = self.available_and_operating_drivers_use_case.execute()
 
-            # Execute use case and get domain-oriented result
-            result = self.edit_use_case.execute(request)
+        if result.is_success:
+            view_models = [self.presenter.present_driver(driver) for driver in result.value]
+            return OperationResult.succeed(view_models)
 
-            if result.is_success:
-                # Convert domain response to view model
-                view_model = self.presenter.present_driver(result.value)
-                return OperationResult.succeed(view_model)
-
-            # Handle domain errors
-            error_vm = self.presenter.present_error(
-                result.error.message, str(result.error.code.name)
-            )
-            return OperationResult.fail(error_vm.message, error_vm.code)
-
-        except ValueError as e:
-            # Handle validation errors
-            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
-            return OperationResult.fail(error_vm.message, error_vm.code)
+        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
+        return OperationResult.fail(error_vm.message, error_vm.code)

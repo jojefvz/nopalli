@@ -24,28 +24,30 @@ class TaskPresenter(ABC):
 class WebTaskPresenter(TaskPresenter):
     """Web-specific task presenter."""
 
-    def present_task(self, task_response: TaskResponse) -> TaskViewModel:
-        """Format task for web display."""
-                
-        def parse_start_time(task_response):
-            if task_response.appointment and task_response.appointment.start_time:
+    def _parse_start_time(self, task_response):
+            if task_response.appointment.appointment_type and task_response.appointment.start_time:
                 return True
             return False
         
-        def parse_end_time(task_response):
-            if task_response.appointment and task_response.appointment.end_time:
-                return True
-            return False
+    def _parse_end_time(self, task_response):
+        if task_response.appointment.appointment_type and task_response.appointment.end_time:
+            return True
+        return False
 
+    def present_task(self, task_response: TaskResponse) -> TaskViewModel:
+        """Format task for web display."""
+        print("APPOINTMENT OBJECT:", task_response.appointment)
         return TaskViewModel(
             id=task_response.id,
-            status=task_response.status,
-            instruction=task_response.instruction.name,
-            container=task_response.container.number,
+            priority=str(task_response.priority),
+            status=task_response.status.value.capitalize(),
+            instruction=task_response.instruction.value,
             date=task_response.date.isoformat(),
-            appointment_type=task_response.appointment.appointment_type if task_response.appointment else None,
-            start_time=task_response.appointment.start_time.isoformat() if parse_start_time(task_response) else None,
-            end_time=task_response.appointment.end_time.isoformat() if parse_end_time(task_response) else None
+            location_name=task_response.location.name if task_response.location else None,
+            container_number=task_response.container.number if task_response.container else None,
+            appointment_type=task_response.appointment.appointment_type.value if task_response.appointment.appointment_type else None,
+            start_time=task_response.appointment.start_time.isoformat() if self._parse_start_time(task_response) else "",
+            end_time=task_response.appointment.end_time.isoformat() if self._parse_end_time(task_response) else ""
         )
 
     def present_error(self, error_msg: str, code: Optional[str] = None) -> ErrorViewModel:

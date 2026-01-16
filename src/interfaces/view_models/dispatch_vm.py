@@ -9,8 +9,11 @@ class DispatchViewModel:
     """View-specific representation of a project."""
 
     id: str
+    reference: str
     status: str
-    containers: list[str]
+    broker_name: str
+    driver_name: Optional[str]
+    container_numbers: list[str]
     plan: list[TaskViewModel]
 
 @dataclass(frozen=True)

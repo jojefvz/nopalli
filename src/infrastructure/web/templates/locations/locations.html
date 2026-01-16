@@ -1,38 +1,34 @@
 {% extends "base.html" %}
 
 {% block main_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/locations/locations.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/locations/_location.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/toast.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/containers.css') }}">
 {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <div class="container-subheading">
-      <h2>Locations</h2>
-      <button 
-      type="button" 
-      class="modal-open js-modal-open" 
-      data-modal-target="#new-location-modal">New Location</button>
-    </div>
-
-    <div class="locations-list-container">
-      {% for location in locations %}
-        {% include 'locations/_location.html' %}
-      {% endfor %}
-    </div>
-
-    <div class="modal js-modal hidden" id="new-location-modal">
-      <div class="modal-backdrop"></div>
-      <div class="modal-body">
+<div class="container" data-page="locations">
+  <div class="container-header">
+    <h2>Locations</h2>
+    <button 
+    type="button" 
+    class="btn"
+    @click="newLocationModal = true">New Location</button>
+  </div>
+  
+  <!-- New Location Modal (unchanged) -->
+  <div v-if="newLocationModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Location</h2>
         <button 
         type="button" 
-        class="modal-close js-modal-close" 
-        data-modal-target="#new-location-modal">close</button>
-        <h2>Add New Location</h2>
-        <form id="new-location-form" method="post">
-          <p>
+        class="close-btn"
+        @click="newLocationModal = false">×</button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('location.create_location') }}" method="post">
+          <div class="form-field">
             <label for="name">Location Name</label>
             <input 
             type="text" 
@@ -41,8 +37,8 @@
             minlength="2"
             maxlength="100"
             required>
-          </p>
-          <p>
+          </div>
+          <div class="form-field">
             <label for="street_address">Street Address</label>
             <input 
             type="text" 
@@ -51,8 +47,8 @@
             minlength="2"
             maxlength="100"
             required>
-          </p>
-          <p>
+          </div>
+          <div class="form-field">
             <label for="city">City</label>
             <input
             type="text"
@@ -61,8 +57,8 @@
             minlength="2"
             maxlength="50"
             required>
-          </p>
-          <p>
+          </div>
+          <div class="form-field">
             <label for="state">State</label>
             <select name="state" id="state" required>
               <option value="" disabled selected>Select a State</option>
@@ -118,8 +114,8 @@
               <option value="WI">Wisconsin</option>
               <option value="WY">Wyoming</option>
             </select>
-          </p>
-          <p>
+          </div>
+          <div class="form-field">
             <label for="zipcode">Zipcode</label>
             <input 
             type="text" 
@@ -129,16 +125,228 @@
             pattern="[0-9]{5}"
             required
             title="Enter a 5-digit ZIP code">
-          </p>
-          <p><button 
-              type="submit" 
-              class="modal-submit js-modal-submit">Submit</button></p>
+          </div>
+          <div class="form-field">
+            <button type="submit">Submit</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+  
+  <!-- Location List -->
+  <div class="container-content">
+    <div v-for="location in locations" :key="location.id" class="object-container">
+      <div class="object-details">
+        <h3>[[ location.name ]] ([[ location.status ]])</h3>
+        <div class="location-address">
+          [[ location.street_address ]]<br>
+          [[ location.city ]], [[ location.state ]] [[ location.zipcode ]]
+        </div>
+        <button @click="openEditModal(location)">Edit</button>
+      </div>
+      <button type="button" @click="openActivateModal(location)">
+        [[ location.status === 'Active' ? 'Deactivate' : 'Activate' ]]
+      </button>
+    </div>
+  </div>
+  
+  <!-- SINGLE Edit Modal - reused for all locations -->
+  <div v-if="selectedLocation && editModalOpen" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Location</h2>
+        <button class="close-btn" @click="closeEditModal">×</button>
+      </div>
+      <div class="modal-body">
+        <form :action="`locations/${selectedLocation.id}/edit`" method="post">
+          <div class="form-field">
+            <label for="name">Location Name</label>
+            <input 
+              type="text" 
+              name="name" 
+              :value="selectedLocation.name" 
+              required>
+          </div>
+          <div class="form-field">
+            <label for="street_address">Street Address</label>
+            <input 
+              type="text" 
+              name="street_address" 
+              :value="selectedLocation.street_address" 
+              required>
+          </div>
+          <div class="form-field">
+            <label for="city">City</label>
+            <input 
+              type="text" 
+              name="city" 
+              :value="selectedLocation.city" 
+              required>
+          </div>
+          <div class="form-field">
+            <label for="state">State</label>
+            <select name="state" required>
+              <option value="" disabled>Select</option>
+              <option value="AL" :selected="selectedLocation.state === 'AL'">Alabama</option>
+              <option value="AK" :selected="selectedLocation.state === 'AK'">Alaska</option>
+              <option value="AZ" :selected="selectedLocation.state === 'AZ'">Arizona</option>
+              <option value="AR" :selected="selectedLocation.state === 'AR'">Arkansas</option>
+              <option value="CA" :selected="selectedLocation.state === 'CA'">California</option>
+              <option value="CO" :selected="selectedLocation.state === 'CO'">Colorado</option>
+              <option value="CT" :selected="selectedLocation.state === 'CT'">Connecticut</option>
+              <option value="DE" :selected="selectedLocation.state === 'DE'">Delaware</option>
+              <option value="DC" :selected="selectedLocation.state === 'DC'">District Of Columbia</option>
+              <option value="FL" :selected="selectedLocation.state === 'FL'">Florida</option>
+              <option value="GA" :selected="selectedLocation.state === 'GA'">Georgia</option>
+              <option value="HI" :selected="selectedLocation.state === 'HI'">Hawaii</option>
+              <option value="ID" :selected="selectedLocation.state === 'ID'">Idaho</option>
+              <option value="IL" :selected="selectedLocation.state === 'IL'">Illinois</option>
+              <option value="IN" :selected="selectedLocation.state === 'IN'">Indiana</option>
+              <option value="IA" :selected="selectedLocation.state === 'IA'">Iowa</option>
+              <option value="KS" :selected="selectedLocation.state === 'KS'">Kansas</option>
+              <option value="KY" :selected="selectedLocation.state === 'KY'">Kentucky</option>
+              <option value="LA" :selected="selectedLocation.state === 'LA'">Louisiana</option>
+              <option value="ME" :selected="selectedLocation.state === 'ME'">Maine</option>
+              <option value="MD" :selected="selectedLocation.state === 'MD'">Maryland</option>
+              <option value="MA" :selected="selectedLocation.state === 'MA'">Massachusetts</option>
+              <option value="MI" :selected="selectedLocation.state === 'MI'">Michigan</option>
+              <option value="MN" :selected="selectedLocation.state === 'MN'">Minnesota</option>
+              <option value="MS" :selected="selectedLocation.state === 'MS'">Mississippi</option>
+              <option value="MO" :selected="selectedLocation.state === 'MO'">Missouri</option>
+              <option value="MT" :selected="selectedLocation.state === 'MT'">Montana</option>
+              <option value="NE" :selected="selectedLocation.state === 'NE'">Nebraska</option>
+              <option value="NV" :selected="selectedLocation.state === 'NV'">Nevada</option>
+              <option value="NH" :selected="selectedLocation.state === 'NH'">New Hampshire</option>
+              <option value="NJ" :selected="selectedLocation.state === 'NJ'">New Jersey</option>
+              <option value="NM" :selected="selectedLocation.state === 'NM'">New Mexico</option>
+              <option value="NY" :selected="selectedLocation.state === 'NY'">New York</option>
+              <option value="NC" :selected="selectedLocation.state === 'NC'">North Carolina</option>
+              <option value="ND" :selected="selectedLocation.state === 'ND'">North Dakota</option>
+              <option value="OH" :selected="selectedLocation.state === 'OH'">Ohio</option>
+              <option value="OK" :selected="selectedLocation.state === 'OK'">Oklahoma</option>
+              <option value="OR" :selected="selectedLocation.state === 'OR'">Oregon</option>
+              <option value="PA" :selected="selectedLocation.state === 'PA'">Pennsylvania</option>
+              <option value="RI" :selected="selectedLocation.state === 'RI'">Rhode Island</option>
+              <option value="SC" :selected="selectedLocation.state === 'SC'">South Carolina</option>
+              <option value="SD" :selected="selectedLocation.state === 'SD'">South Dakota</option>
+              <option value="TN" :selected="selectedLocation.state === 'TN'">Tennessee</option>
+              <option value="TX" :selected="selectedLocation.state === 'TX'">Texas</option>
+              <option value="UT" :selected="selectedLocation.state === 'UT'">Utah</option>
+              <option value="VT" :selected="selectedLocation.state === 'VT'">Vermont</option>
+              <option value="VA" :selected="selectedLocation.state === 'VA'">Virginia</option>
+              <option value="WA" :selected="selectedLocation.state === 'WA'">Washington</option>
+              <option value="WV" :selected="selectedLocation.state === 'WV'">West Virginia</option>
+              <option value="WI" :selected="selectedLocation.state === 'WI'">Wisconsin</option>
+              <option value="WY" :selected="selectedLocation.state === 'WY'">Wyoming</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="zipcode">Zipcode</label>
+            <input 
+              type="text" 
+              name="zipcode" 
+              :value="selectedLocation.zipcode" 
+              maxlength="5" 
+              pattern="[0-9]{5}"
+              required>
+          </div>
+          <div class="form-field">
+            <button type="submit" class="modal-submit">Submit</button>
+          </div>
         </form>
       </div>
     </div>
   </div>
+  
+  <!-- SINGLE Activate/Deactivate Modal - reused for all locations -->
+  <div v-if="selectedLocation && activateModalOpen" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>[[ selectedLocation.status === 'Active' ? 'Deactivating' : 'Activating' ]]: [[ selectedLocation.name ]]</h2>
+        <button class="close-btn" @click="closeActivateModal">×</button>
+      </div>
+      <div class="modal-body">
+        <form method="post"
+        :action="activationActionUrl">
+          <p v-if="selectedLocation.status === 'Active'">
+            Are you sure you would like to deactivate this location?
+            Location will no longer be available for selection.
+          </p>
+          <p v-else>
+            Are you sure you would like to activate this location?
+            Location will be available for location selection.
+          </p>
+          <input type="hidden" name="id" :value="selectedLocation.id">
+          <p>
+            <button type="submit">
+              [[ selectedLocation.status === 'Active' ? 'Deactivate' : 'Activate' ]]
+            </button>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
-{% block script %}
-  <script type="module" src="../../static/scripts/locations.js"></script>
+{% block scripts %}
+<script> 
+  createApp({
+    delimiters: ['[[', ']]'],
+    data() {
+      return {
+        newLocationModal: false,
+        editModalOpen: false,
+        activateModalOpen: false,
+        selectedLocation: null,  // Stores the currently selected location
+        locations: [
+          {% for location in locations %}
+            {
+              id: "{{ location.id }}",
+              name: "{{ location.name }}",
+              status: "{{ location.status }}",
+              street_address: "{{ location.street_address }}",
+              city: "{{ location.city }}",
+              state: "{{ location.state }}",
+              zipcode: "{{ location.zipcode }}"
+            }{{ "," if not loop.last }}
+          {% endfor %}
+        ]
+      }
+    },
+    methods: {
+      openEditModal(location) {
+        this.selectedLocation = location;
+        this.editModalOpen = true;
+      },
+      closeEditModal() {
+        this.editModalOpen = false;
+        this.selectedLocation = null;
+      },
+      openActivateModal(location) {
+        this.selectedLocation = location;
+        this.activateModalOpen = true;
+      },
+      closeActivateModal() {
+        this.activateModalOpen = false;
+        this.selectedLocation = null;
+      }
+    },
+    computed: {
+      activationActionUrl() {
+        if (!this.selectedLocation) return '';
+        
+        const activateBaseUrl = '{{ url_for("location.activate", id=0) }}';
+        const deactivateBaseUrl = '{{ url_for("location.deactivate", id=0) }}';
+        
+        const activateUrl = activateBaseUrl.replace('/0', '/' + this.selectedLocation.id);
+        const deactivateUrl = deactivateBaseUrl.replace('/0', '/' + this.selectedLocation.id);
+        
+        return this.selectedLocation.status === 'Active' ? deactivateUrl : activateUrl;
+      }
+    }
+  }).mount('[data-page="locations"]');
+</script>
 {% endblock %}

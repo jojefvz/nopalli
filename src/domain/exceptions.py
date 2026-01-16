@@ -43,6 +43,13 @@ class DispatchNotFoundError(DomainError):
         self.dispatch_id = dispatch_id
         super().__init__(f"Driver with id {dispatch_id} not found")
 
+class TaskNotFoundError(DomainError):
+    """Raised when attempting to access a task that doesn't exist."""
+
+    def __init__(self, task_id: UUID) -> None:
+        self.task_id = task_id
+        super().__init__(f"Driver with id {task_id} not found")
+
 
 class ValidationError(DomainError):
     """Raised when domain validation rules are violated."""

@@ -10,6 +10,7 @@ from src.domain.aggregates.driver.aggregate import Driver
 from src.domain.aggregates.driver.value_objects import DriverStatus
 from src.domain.aggregates.location.aggregate import Location
 from src.domain.aggregates.location.value_objects import LocationStatus
+from src.domain.exceptions import BusinessRuleViolation
 
 
 class Dispatcher:
@@ -18,68 +19,40 @@ class Dispatcher:
         priority: int,
         location: Optional[Location],
         instruction: Instruction,
-        container: Container,
+        container: Optional[Container],
         date: date,
         appointment: Optional[Appointment],
         ) -> Task:
-        if isinstance(location, Location) and location.status == LocationStatus.INACTIVE:
-            raise ValueError('Cannot set a deactivated location on a new task.')
+        if location and location.status == LocationStatus.INACTIVE:
+            raise BusinessRuleViolation('Cannot set a deactivated location on a new task.')
         
-        location_ref = location.id if isinstance(location, Location) else None
+        location = location if location else None
 
         return Task(
             priority,
             instruction,
             date,
+            location,
             container,
-            location_ref,
             appointment
         )
     
     @staticmethod
     def create_dispatch(
         broker: Broker,
-        containers: list[Container],
-        plan: list[Task],
-        driver: Optional[Driver] = None
+        driver: Optional[Driver],
+        plan: list[Task]
         ) -> Dispatch:
         if broker.status == BrokerStatus.INACTIVE:
-            raise ValueError('Cannot set a deactivated broker on a dispatch.')
+            raise BusinessRuleViolation('Cannot set a deactivated broker on a dispatch.')
         if driver.status == DriverStatus.UNAVAILABLE:
-            raise ValueError('Cannot set a unavailable driver on a dispatch.')
+            raise BusinessRuleViolation('Cannot set an unavailable driver on a dispatch.')
         if driver.status == DriverStatus.DEACTIVATED:
-            raise ValueError('Cannot set a deactivated driver on a dispatch.')
-        if len(containers) < 1:
-            raise ValueError("A new dispatch requires at least one container.")
+            raise BusinessRuleViolation('Cannot set a deactivated driver on a dispatch.')
         if len(plan) < 2:
-            raise ValueError("A new dispatch plan requires at least two tasks.")
+            raise BusinessRuleViolation("A new dispatch plan requires at least two tasks.")
         
-        # if len(containers) == 1:
-        #     for task in plan:
-        #         if task.instruction in (
-        #             Instruction.FETCH_CHASSIS,
-        #             Instruction.BOBTAIL_TO,
-        #             Instruction.TERMINATE_CHASSIS,
-        #         ):
-        #             continue
-        #         task.container = containers[0]
-        
-        return Dispatch(broker.id, containers, plan, driver.id)
-    
-    @staticmethod
-    def assign_container_to_tasks(dispatch: Dispatch, container: str, task_priorities: list[int]):
-        if container not in dispatch.containers:
-            raise ValueError('Container number is not in dispatch cannot be assigned to tasks.')
-        for priority in task_priorities:
-            if dispatch.get_task(priority).instruction in (
-                Instruction.FETCH_CHASSIS,
-                Instruction.BOBTAIL_TO,
-                Instruction.TERMINATE_CHASSIS,
-            ):
-                raise ValueError('Invalid assignment of container to task that does not require a container.')
-            
-        for priority in task_priorities:
-            dispatch.get_task(priority).container = container
+        return Dispatch(broker, plan, driver)
     
     @staticmethod
     def assign_driver(dispatch: Dispatch, driver: Driver):

@@ -11,28 +11,35 @@
   <header>
     <h1>Nopalli</h1>
     <nav>
-      <ul class="site-nav">
+      <ul class="navbar">
         <li><a href="{{ url_for('home.home') }}">Home</a></li>
-        <li class="dropdown nav">
-          <div class="dropdown-label nav">Dispatch</div>
-          <div class="dropdown-menu nav">
-            <ul class="submenu">
-              <li><a href="">Loadboard</a></li>
-              <li><a href="{{ url_for('dispatch.list_dispatches') }}">Dispatches</a></li>
-              <li><a href="{{ url_for('driver.list_drivers') }}">Drivers</a></li>
-              <li><a href="{{ url_for('broker.list_brokers') }}">Brokers</a></li>
-              <li><a href="{{ url_for('location.list_locations') }}">Locations</a></li>
-            </ul>
+        <li class="dropdown">
+          <button
+          class="dropdown-toggle"
+          @click="toggleDropdown('dispatch')"
+          @blur="closeDropdown('dispatch')">
+            <span>Dispatch</span>
+            <span class="dropdown-arrow" :class="{ open: openDropdown === 'dispatch' }">▼</span>
+          </button>
+          <div v-if="openDropdown === 'dispatch'" class="dropdown-menu">
+            <a class="dropdown-item" href="">Loadboard</a>
+            <a class="dropdown-item" href="{{ url_for('dispatch.index') }}">Dispatches</a>
+            <a class="dropdown-item" href="{{ url_for('driver.index') }}">Drivers</a>
+            <a class="dropdown-item" href="{{ url_for('broker.index') }}">Brokers</a>
+            <a class="dropdown-item" href="{{ url_for('location.index') }}">Locations</a>
           </div>
         </li>
-        <li class="dropdown nav">
-          <div class="dropdown-label nav">Invoicing</div>
-          <div class="dropdown-menu nav">
-            <ul class="submenu">
-              <li><a href="">Validations</a></li>
-              <li><a href="">Invoiced</a></li>
-              <li><a href="">Reports</a></li>
-            </ul>
+        <li class="dropdown">
+          <button
+          class="dropdown-toggle"
+          @click="toggleDropdown('invoice')"
+          @blur="closeDropdown('invoice')">
+            <span>Invoicing</span>
+            <span class="dropdown-arrow" :class="{ open: openDropdown === 'invoice' }">▼</span>
+          </button>
+          <div v-if="openDropdown === 'invoice'" class="dropdown-menu">
+            <a class="dropdown-item" href="#">Completed</a>
+            <a class="dropdown-item" href="#">Pending</a>
           </div>
         </li>
         <li><a href="">Reports</a></li>
@@ -40,9 +47,70 @@
       </ul>
     </nav>
   </header>
+  <div id="flash-messages">
+    <div 
+    v-for="(flash, index) in flashMessages" 
+    :key="index" 
+    :class="['flash-message', 'flash-' + flash.category]">
+      [[ flash.message ]]
+    </div>
+  </div>
   <main>
     {% block content %}{% endblock %}
   </main>
-  {% block script %}{% endblock %}
+  <footer>
+    <div class="base-footer">
+      <h2>Nopalli ©</h2>
+    </div>
+  </footer>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      delimiters: ['[[', ']]'],
+      data() {
+        return {
+          openDropdown: null
+        }
+      },
+      methods: {
+        toggleDropdown(dropdownName) {
+          this.openDropdown = this.openDropdown === dropdownName ? null: dropdownName;
+        },
+        closeDropdown(dropdownName) {
+          setTimeout(() => {
+            if (this.openDropdown === dropdownName)
+              this.openDropdown = null;
+          }, 200);
+        }
+      }
+    }).mount('nav');
+
+    {% set messages = get_flashed_messages(with_categories=true) %}
+    createApp({
+      delimiters: ['[[', ']]'],
+      data() {
+        return {
+          flashMessages: [
+            {% if messages %}
+              {% for category, message in messages %}
+                { 
+                  category: "{{ category }}", 
+                  message: "{{ message }}"
+                }{{ "," if not loop.last }}
+              {% endfor %}
+            {% endif %}
+          ]
+        }
+      },
+      mounted() {
+        setTimeout(() => {
+          this.flashMessages = [];
+        }, 6000);
+      },
+      }).mount('#flash-messages');
+  </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

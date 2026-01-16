@@ -1,166 +1,378 @@
 {% extends "base.html" %}
 
 {% block main_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dispatches/dispatches.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dispatches/_dispatch.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/containers.css') }}">
 {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <div class="container-subheading">
-      <h2>Dispatches</h2>
-      <button 
-      type="button"
-      class="modal-open js-modal-open" 
-      data-modal-target="#new-dispatch-modal">Create Dispatch</button>
-    </div>
-
-    {#<div class="dispatches-list-container">
-      {% for dispatch in dispatches %}
-        {% include 'dispatches/_dispatch.html' %}
-      {% endfor %}
-    </div>#}
-
-    <div class="modal js-modal hidden" id="new-dispatch-modal">
-      <div class="modal-backdrop"></div>
-      <div class="modal-body">
+<div class="container" data-page="dispatches">
+  <div class="container-header">
+    <h2>Dispatches</h2>
+    <button 
+    type="button" 
+    class="btn"
+    @click="openNewDispatchModal">New Dispatch</button>
+  </div>
+  
+  <!-- New Dispatch Modal (unchanged) -->
+  <div v-if="newDispatchModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Dispatch</h2>
         <button 
-        type="button"
-        class="modal-close js-modal-close" 
-        data-modal-target="#new-dispatch-modal">close</button>
-        <h2>Create Dispatch</h2>
-        <form id="dispatch-form" method="post" autocomplete="off">
-          <div class="form-broker">
-            Broker <input type="text" required>
-            <input type="hidden" name="broker_ref" value="">
-            <div class="dropdown hidden"></div>
-          </div>
-          <div class="form-driver">
-            Driver <input type="text">
-            <input type="hidden" name="driver_ref" value="">
-            <div class="dropdown hidden"></div>
-          </div>
-          <div class="form-containers">
-            <div class="form-container">
-              Container <input type="text" class="input-container" data-index="1" name="container_1">
-            </div>
-            <div><button type="button" id="add-container-btn">Add Container</button></div>
-          </div>
-          <div class="form-tasks">
-            <div class="form-task">
-              <h3>Stop</h3>
-              <input type="hidden" name="task_priority_1" value="1">
-              <div class="form-location">
-                Location <input type="text" value="TBD">
-                <input type="hidden" name="task_location_ref_1" value="">
-                <div class="dropdown hidden"></div>
-              </div>
-              <div class="form-instruction">
-                Task <select name="task_instruction_1" required>
-                  <option value="">Select</option>
-                  <option value="fetch_chassis">Fetch Chassis</option>
-                  <option value="prepull">Prepull</option>
-                  <option value="bobtail_to">Bobtail To</option>
-                  <option value="pickup_empty">Pickup Empty</option>
-                  <option value="drop_empty">Drop Empty</option>
-                  <option value="live_load">Live Load</option>
-                  <option value="pickup_loaded">Pickup Loaded</option>
-                  <option value="drop_loaded">Drop Loaded</option>
-                  <option value="live_unload">Live Unload</option>
-                  <option value="terminate_empty">Terminate Empty</option>
-                  <option value="terminate_chassis">Terminate Chassis</option>
-                  <option value="ingate">Ingate</option>
-                  <option value="yard_pull">Yard Pull</option>
-                  <option value="street_turn">Street Turn</option>
-                </select>
-              </div>
-              <div class="form-task-container">
-                Container <select name="task_container_1" class="container-dropdown">
-                  <option value="">Select</option>
-                  <option value="" data-index="1"></option>
-                  <option value="" data-index="2"></option>
-                  <option value="" data-index="3"></option>
-                </select>
-              </div>
-              <div class="form-date">
-                Date <input type="date" name="task_date_1" required>
-              </div>
-              <div class="form-appointment">
-                Appointment Type <select name="task_type_1">
-                  <option value="">Appt Type</option>
-                  <option value="open">Open</option>
-                  <option value="exact_time">Exact Time</option>
-                  <option value="time_window">Time Window</option>
-                  <option value="ready_after">Ready After</option>
-                  <option value="finish_before">Finish Before</option>
-                </select><br><br>
-                <span>Start <input type="time" name="task_start_time_1"></span>
-                <span>End <input type="time" name="task_end_time_1"></span>
+        type="button" 
+        class="close-btn"
+        @click="newDispatchModal = false">×</button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('dispatch.create_dispatch') }}" method="post">
+          <div class="form-field">
+            <label for="broker_search">Broker</label>
+            <div class="dropdown" style="margin: 0;">
+              <input 
+              type="text" 
+              id="broker_search" 
+              v-model="brokerSearch"
+              @focus="showBrokerDropdown = true"
+              @blur="hideBrokerDropdown"
+              minlength="2"
+              maxlength="100"
+              autocomplete="off"
+              required>
+              <div v-if="showBrokerDropdown && filteredBrokers.length > 0" class="dropdown-list">
+                <div 
+                  v-for="broker in filteredBrokers" 
+                  :key="broker.id"
+                  @mousedown="selectBroker(broker)"
+                  class="dropdown-option">
+                  [[ broker.name ]]
+                </div>
               </div>
             </div>
-            <div class="form-task">
-              <h3>Stop</h3>
-              <input type="hidden" name="task_priority_2" value="2">
-              <div class="form-location">
-                Location <input type="text" value="TBD">
-                <input type="hidden" name="task_location_ref_2" value="">
-                <div class="dropdown hidden"></div>
-              </div>
-              <div class="form-instruction">
-                Task <select name="task_instruction_2" required>
-                  <option value="">Select</option>
-                  <option value="fetch_chassis">Fetch Chassis</option>
-                  <option value="prepull">Prepull</option>
-                  <option value="bobtail_to">Bobtail To</option>
-                  <option value="pickup_empty">Pickup Empty</option>
-                  <option value="drop_empty">Drop Empty</option>
-                  <option value="live_load">Live Load</option>
-                  <option value="pickup_loaded">Pickup Loaded</option>
-                  <option value="drop_loaded">Drop Loaded</option>
-                  <option value="live_unload">Live Unload</option>
-                  <option value="terminate_empty">Terminate Empty</option>
-                  <option value="terminate_chassis">Terminate Chassis</option>
-                  <option value="ingate">Ingate</option>
-                  <option value="yard_pull">Yard Pull</option>
-                  <option value="street_turn">Street Turn</option>
-                </select>
-              </div>
-              <div class="form-task-container">
-                Container <select name="task_container_2" class="container-dropdown">
-                  <option value="">Select</option>
-                  <option value="" data-index="1"></option>
-                  <option value="" data-index="2"></option>
-                  <option value="" data-index="3"></option>
-                </select>
-              </div>
-              <div class="form-date">
-                Date <input type="date" name="task_date_2" required>
-              </div>
-              <div class="form-appointment">
-                Appointment Type <select name="task_type_2">
-                  <option value="">Appt Type</option>
-                  <option value="open">Open</option>
-                  <option value="exact_time">Exact Time</option>
-                  <option value="time_window">Time Window</option>
-                  <option value="ready_after">Ready After</option>
-                  <option value="finish_before">Finish Before</option>
-                </select><br><br>
-                <span>Start <input type="time" name="task_start_time_2"></span>
-                <span>End <input type="time" name="task_end_time_2"></span>
-              </div>
-            </div>
-            <div>
-              <button type="button" id="add-task-btn">Add Task</button>
-            </div>
+            <input type="hidden" name="broker_id" :value="selectedBrokerId">
           </div>
-          <p><button type="submit" class="modal-submit">Submit</button></p>
+          <div class="form-field">
+            <label for="driver_search">Driver</label>
+            <div class="dropdown" style="margin: 0;">
+              <input 
+              type="text" 
+              id="driver_search" 
+              v-model="driverSearch"
+              @focus="showDriverDropdown = true"
+              @blur="hideDriverDropdown"
+              minlength="2"
+              maxlength="100"
+              autocomplete="off"
+              required>
+              <div v-if="showDriverDropdown && filteredDrivers.length > 0" class="dropdown-list">
+                <div 
+                  v-for="driver in filteredDrivers" 
+                  :key="driver.id"
+                  @mousedown="selectDriver(driver)"
+                  class="dropdown-option">
+                  [[ driver.name ]]
+                </div>
+              </div>
+            </div>
+            <input type="hidden" name="driver_id" :value="selectedDriverId">
+          </div>
+          <div class="form-field" style="flex-direction: column;">
+            <label>Container Numbers</label>
+            <div v-for="(container, index) in containerNumbers" :key="index" class="input-group" style="margin: 0;">
+              <input 
+                type="text" 
+                v-model="containerNumbers[index]"
+                :name="'container_' + index"
+                placeholder="Enter container number"
+                required>
+              <button 
+                v-if="containerNumbers.length > 1"
+                type="button" 
+                @click="removeContainer(index)"
+                class="btn-remove">×</button>
+            </div>
+            <button 
+              type="button" 
+              @click="addContainer"
+              class="btn-add">+ Add Container</button>
+          </div>
+          <div class="form-field">
+            <button type="submit">Submit</button>
+          </div>
+        </form>
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+  
+  <!-- Dispatch List -->
+  <div class="container-content">
+    <div v-for="dispatch in dispatches" :key="dispatch.reference" class="object-container">
+      <div class="object-details">
+        <h3>[[ dispatch.reference ]] ([[ dispatch.status ]])</h3>
+        <button @click="openEditModal(dispatch)">Edit</button>
+      </div>
+      {#<button type="button" @click="openActivateModal(dispatch)">
+        [[ dispatch.status === 'Draft' ? 'Deactivate' : 'Activate' ]]
+      </button>#}
+    </div>
+  </div>
+  
+  <!-- SINGLE Edit Modal - reused for all dispatches -->
+  {#<div v-if="selectedDispatch && editModalOpen" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Dispatch</h2>
+        <button class="close-btn" @click="closeEditModal">×</button>
+      </div>
+      <div class="modal-body">
+        <form :action="`dispatches/${selectedDispatch.id}/edit`" method="post">
+          <div class="form-field">
+            <label for="name">Dispatch Name</label>
+            <input 
+              type="text" 
+              name="name" 
+              :value="selectedDispatch.name" 
+              required>
+          </div>
+          <div class="form-field">
+            <label for="street_address">Street Address</label>
+            <input 
+              type="text" 
+              name="street_address" 
+              :value="selectedDispatch.street_address" 
+              required>
+          </div>
+          <div class="form-field">
+            <label for="city">City</label>
+            <input 
+              type="text" 
+              name="city" 
+              :value="selectedDispatch.city" 
+              required>
+          </div>
+          <div class="form-field">
+            <label for="state">State</label>
+            <select name="state" required>
+              <option value="" disabled>Select</option>
+              <option value="AL" :selected="selectedDispatch.state === 'AL'">Alabama</option>
+              <option value="AK" :selected="selectedDispatch.state === 'AK'">Alaska</option>
+              <option value="AZ" :selected="selectedDispatch.state === 'AZ'">Arizona</option>
+              <option value="AR" :selected="selectedDispatch.state === 'AR'">Arkansas</option>
+              <option value="CA" :selected="selectedDispatch.state === 'CA'">California</option>
+              <option value="CO" :selected="selectedDispatch.state === 'CO'">Colorado</option>
+              <option value="CT" :selected="selectedDispatch.state === 'CT'">Connecticut</option>
+              <option value="DE" :selected="selectedDispatch.state === 'DE'">Delaware</option>
+              <option value="DC" :selected="selectedDispatch.state === 'DC'">District Of Columbia</option>
+              <option value="FL" :selected="selectedDispatch.state === 'FL'">Florida</option>
+              <option value="GA" :selected="selectedDispatch.state === 'GA'">Georgia</option>
+              <option value="HI" :selected="selectedDispatch.state === 'HI'">Hawaii</option>
+              <option value="ID" :selected="selectedDispatch.state === 'ID'">Idaho</option>
+              <option value="IL" :selected="selectedDispatch.state === 'IL'">Illinois</option>
+              <option value="IN" :selected="selectedDispatch.state === 'IN'">Indiana</option>
+              <option value="IA" :selected="selectedDispatch.state === 'IA'">Iowa</option>
+              <option value="KS" :selected="selectedDispatch.state === 'KS'">Kansas</option>
+              <option value="KY" :selected="selectedDispatch.state === 'KY'">Kentucky</option>
+              <option value="LA" :selected="selectedDispatch.state === 'LA'">Louisiana</option>
+              <option value="ME" :selected="selectedDispatch.state === 'ME'">Maine</option>
+              <option value="MD" :selected="selectedDispatch.state === 'MD'">Maryland</option>
+              <option value="MA" :selected="selectedDispatch.state === 'MA'">Massachusetts</option>
+              <option value="MI" :selected="selectedDispatch.state === 'MI'">Michigan</option>
+              <option value="MN" :selected="selectedDispatch.state === 'MN'">Minnesota</option>
+              <option value="MS" :selected="selectedDispatch.state === 'MS'">Mississippi</option>
+              <option value="MO" :selected="selectedDispatch.state === 'MO'">Missouri</option>
+              <option value="MT" :selected="selectedDispatch.state === 'MT'">Montana</option>
+              <option value="NE" :selected="selectedDispatch.state === 'NE'">Nebraska</option>
+              <option value="NV" :selected="selectedDispatch.state === 'NV'">Nevada</option>
+              <option value="NH" :selected="selectedDispatch.state === 'NH'">New Hampshire</option>
+              <option value="NJ" :selected="selectedDispatch.state === 'NJ'">New Jersey</option>
+              <option value="NM" :selected="selectedDispatch.state === 'NM'">New Mexico</option>
+              <option value="NY" :selected="selectedDispatch.state === 'NY'">New York</option>
+              <option value="NC" :selected="selectedDispatch.state === 'NC'">North Carolina</option>
+              <option value="ND" :selected="selectedDispatch.state === 'ND'">North Dakota</option>
+              <option value="OH" :selected="selectedDispatch.state === 'OH'">Ohio</option>
+              <option value="OK" :selected="selectedDispatch.state === 'OK'">Oklahoma</option>
+              <option value="OR" :selected="selectedDispatch.state === 'OR'">Oregon</option>
+              <option value="PA" :selected="selectedDispatch.state === 'PA'">Pennsylvania</option>
+              <option value="RI" :selected="selectedDispatch.state === 'RI'">Rhode Island</option>
+              <option value="SC" :selected="selectedDispatch.state === 'SC'">South Carolina</option>
+              <option value="SD" :selected="selectedDispatch.state === 'SD'">South Dakota</option>
+              <option value="TN" :selected="selectedDispatch.state === 'TN'">Tennessee</option>
+              <option value="TX" :selected="selectedDispatch.state === 'TX'">Texas</option>
+              <option value="UT" :selected="selectedDispatch.state === 'UT'">Utah</option>
+              <option value="VT" :selected="selectedDispatch.state === 'VT'">Vermont</option>
+              <option value="VA" :selected="selectedDispatch.state === 'VA'">Virginia</option>
+              <option value="WA" :selected="selectedDispatch.state === 'WA'">Washington</option>
+              <option value="WV" :selected="selectedDispatch.state === 'WV'">West Virginia</option>
+              <option value="WI" :selected="selectedDispatch.state === 'WI'">Wisconsin</option>
+              <option value="WY" :selected="selectedDispatch.state === 'WY'">Wyoming</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="zipcode">Zipcode</label>
+            <input 
+              type="text" 
+              name="zipcode" 
+              :value="selectedDispatch.zipcode" 
+              maxlength="5" 
+              pattern="[0-9]{5}"
+              required>
+          </div>
+          <div class="form-field">
+            <button type="submit" class="modal-submit">Submit</button>
+          </div>
         </form>
       </div>
     </div>
-  </div>
+  </div>#}
+  
+  <!-- SINGLE Activate/Deactivate Modal - reused for all dispatches -->
+  {#<div v-if="selectedDispatch && activateModalOpen" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>[[ selectedDispatch.status === 'Active' ? 'Deactivating' : 'Activating' ]]: [[ selectedDispatch.name ]]</h2>
+        <button class="close-btn" @click="closeActivateModal">×</button>
+      </div>
+      <div class="modal-body">
+        <form method="post"
+        :action="activationActionUrl">
+          <p v-if="selectedDispatch.status === 'Active'">
+            Are you sure you would like to deactivate this dispatch?
+            Dispatch will no longer be available for selection.
+          </p>
+          <p v-else>
+            Are you sure you would like to activate this dispatch?
+            Dispatch will be available for dispatch selection.
+          </p>
+          <input type="hidden" name="id" :value="selectedDispatch.id">
+          <p>
+            <button type="submit">
+              [[ selectedDispatch.status === 'Active' ? 'Deactivate' : 'Activate' ]]
+            </button>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>#}
+</div>
 {% endblock %}
 
-{% block script %}
-  <script type="module" src="../../static/scripts/dispatches.js"></script>
+{% block scripts %}
+<script> 
+  createApp({
+    delimiters: ['[[', ']]'],
+    data() {
+      return {
+        newDispatchModal: false,
+        selectedDispatch: null,  // Stores the currently selected dispatch
+        dispatches: [
+          {% for dispatch in dispatches %}
+            {
+              id: "{{ dispatch.id }}",
+              reference: "{{ dispatch.reference }}",
+              status: "{{ dispatch.status }}",
+              broker_name: "{{ dispatch.broker_name }}",
+              driver_name: {{ dispatch.driver_name|tojson }},
+              container_numbers: {{ dispatch.container_numbers|tojson }},
+              plan: {{ dispatch.plan|tojson }}
+            }{{ "," if not loop.last }}
+          {% endfor %}
+        ],
+        
+        // brokers
+        brokerSearch: '',
+        selectedBrokerId: '',
+        showBrokerDropdown: false,
+        brokers: [],
+        loadingBrokers: false,
+          
+        // drivers
+        driverSearch: '',
+        selectedDriverId: '',
+        showDriverDropdown: false,
+        drivers: [],
+        loadingDrivers: false,
+
+        // containers
+        containerNumbers: ['']
+      }
+    },
+    computed: {
+      filteredBrokers() {
+        if (!this.brokerSearch) return this.brokers;
+
+        const search = this.brokerSearch.toLowerCase();
+        return this.brokers.filter(broker => 
+          broker.name.toLowerCase().includes(search)
+        )
+      },
+      filteredDrivers() {
+        if (!this.driverSearch) return this.drivers;
+
+        const search = this.driverSearch.toLowerCase();
+        return this.drivers.filter(driver => 
+          driver.name.toLowerCase().includes(search)
+        )
+      }
+    },
+    methods: {
+      async fetchBrokers() {
+        this.loadingBrokers = true;
+        try {
+          const response = await fetch('{{ url_for("broker.get_active_brokers") }}');
+          const data = await response.json();
+          this.brokers = data;
+        } catch (error) {
+          console.error('Error fetching brokers:', error);
+        } finally {
+          this.loadingBrokers = false;
+        }
+      },
+      selectBroker(broker) {
+        this.brokerSearch = broker.name;
+        this.selectedBrokerId = broker.id;
+        this.showBrokerDropdown = false;
+      },
+      hideBrokerDropdown() {
+        setTimeout(() => {
+          this.showBrokerDropdown = false;
+        }, 200);
+      },
+      async fetchDrivers() {
+        this.loadingDrivers = true;
+        try {
+          const response = await fetch('{{ url_for("driver.get_available_and_operating") }}');
+          const data = await response.json();
+          this.drivers = data;
+        } catch (error) {
+          console.error('Error fetching drivers:', error);
+        } finally {
+          this.loadingDrivers = false;
+        }
+      },
+      selectDriver(driver) {
+        this.driverSearch = driver.name;
+        this.selectedDriverId = driver.id;
+        this.showDriverDropdown = false;
+      },
+      hideDriverDropdown() {
+        setTimeout(() => {
+          this.showDriverDropdown = false;
+        }, 200);
+      },
+      openNewDispatchModal() {
+        this.newDispatchModal = true;
+        this.fetchBrokers();
+        this.fetchDrivers();
+      },
+      addContainer() {
+        this.containerNumbers.push('');
+      },
+      removeContainer(index) {
+        this.containerNumbers.splice(index, 1);
+      }
+    }
+  }).mount('[data-page="dispatches"]');
+</script>
 {% endblock %}

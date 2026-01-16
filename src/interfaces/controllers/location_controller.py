@@ -151,7 +151,7 @@ class LocationController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
         
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
@@ -174,7 +174,7 @@ class LocationController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
         
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
@@ -216,7 +216,7 @@ class LocationController:
             )
             return OperationResult.fail(error_vm.message, error_vm.code)
 
-        except ValueError as e:
+        except ValidationError as e:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)

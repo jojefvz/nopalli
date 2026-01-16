@@ -1,51 +1,126 @@
 <div class="dispatch-container">
   <div class="dispatch-details">
-    <h3>{{ dispatch.id }} ({{ dispatch.status.value }})</h3>
+    <h3>Ref. {{ dispatch.reference }} ({{ dispatch.status }})</h3>
     <div class="dispatch-address">
-      {{ dispatch.driver }}<br>
-      {% for container in dispatch.containers %}
-        <div>{{ container }}</div>
-      {% endfor %}
+      {% if dispatch.driver_name %}
+      Current Driver: {{ dispatch.driver_name }}<br>
+      {% else %}
+      No Driver Assigned
+      {% endif %}
     </div>
-    <button class="modal-open edit" href="#edit-dispatch-{{ dispatch.id }}-modal">Edit</button>
+    <button class="modal-open js-modal-open" data-modal-target="#edit-dispatch-{{ dispatch.id }}-modal">Edit</button>
   </div>
 
-  {# <div class="modal" id="edit-dispatch-{{ dispatch.id }}-modal">
+  {% if dispatch.status == 'Draft' %}
+  <button class="modal-open js-modal-open" data-modal-target="#activation-{{ dispatch.id }}-modal">Dispatch</button>
+  {% else %}
+  <span>{{ dispatch.status }}</span>
+  {% endif %}
+
+  <div class="modal js-modal hidden" id="edit-dispatch-{{ dispatch.id }}-modal">
     <div class="modal-backdrop"></div>
     <div class="modal-body">
-      <button class="modal-close" href="#edit-dispatch-{{ dispatch.id }}-modal">close</button>
+      <button class="modal-close js-modal-close" data-modal-target="#edit-dispatch-{{ dispatch.id }}-modal">close</button>
       <h2>Edit Dispatch</h2>
-      <form action="{{ url_for('dispatch.edit_dispatch') }}" method="post">
+      <form class="edit-dispatch-form" method="post">
         <input type="hidden" name="id" value="{{ dispatch.id }}">
-        <p>
-          <label for="name">Dispatch Name</label>
-          <input type="text" id="name" name="name" value="{{ dispatch.name }}" required>
-        </p>
-        <p>
-          <label for="street_address">Street Address</label>
-          <input type="text" id="street_address" name="street_address" value="{{ dispatch.street_address }}" required>
-        </p>
-        <p>
-          <label for="city">City</label>
-          <input type="text" id="city" name="city" value="{{ dispatch.city }}" required>
-        </p>
-        <p>
-          <label for="state">State</label>
-          <input type="text" id="state" name="state" value="{{ dispatch.state }}" required>
-        </p>
-        <p>
-          <label for="zipcode">Zipcode</label>
-          <input type="text" id="zipcode" name="zipcode" value="{{ dispatch.zipcode }}" required>
-        </p>
-        <p><button type="submit" class="modal-submit">Submit</button></p>
+        <div class="form-broker">
+          Broker <input type="text" value="{{ dispatch.broker_name }}" required>
+          <input type="hidden" name="broker_id" value="">
+          <div class="dropdown hidden"></div>
+        </div>
+        <div class="form-driver">
+          Driver <input type="text" value="{{ dispatch.driver_name }}">
+          <input type="hidden" name="driver_id" value="">
+          <div class="dropdown hidden"></div>
+        </div>
+        <div class="form-containers">
+          {% for cont in dispatch.container_numbers %}
+          <div class="form-container">
+            Container <input type="text" class="container-input" data-index="{{ loop.index }}" value="{{ cont }}">
+          </div>
+          {% endfor %}
+          <div><button type="button" class="add-container-btn">Add Container</button></div>
+        </div>
+        <div class="form-tasks">
+          {% macro task_card(
+            priority, location_name, instruction, date, appointment_type, start_time, end_time) %}
+          <div class="form-task">
+            {% if priority | int > 2 %}
+            <button type="button" class="form-task-remove" onclick="this.parentNode.remove()"></button>
+            {% endif %}
+            <h3>Stop</h3>
+            <input type="hidden" name="task_priority_{{ priority }}" value="{{ priority }}">
+            <div class="form-location">
+              Location <input type="text" value="{{ location_name }}">
+              <input type="hidden" name="task_location_id_{{ priority }}" value="">
+              <div class="dropdown hidden"></div>
+            </div>
+            <div class="form-instruction">
+              {% set TaskType = [
+                  'fetch_chassis', 'prepull', 'bobtail_to', 'pickup_empty', 
+                  'drop_empty', 'live_load', 'pickup_loaded', 'drop_loaded', 
+                  'live_unload', 'terminate_empty', 'terminate_chassis', 
+                  'ingate', 'yard_pull', 'street_turn'
+              ] %}
+              Task <select name="task_instruction_{{ priority }}" required>
+                <option value="">Select</option>
+                {% for task in TaskType %}
+                <option value="{{ task }}" {% if instruction == task %}selected{% endif %}>
+                    {{ task.replace('_', ' ').title() }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-task-container">
+              Container <select name="task_container_{{ priority }}" class="task-container-dropdown">
+                <option value="">Select</option>
+                <option value="{{ dispatch.container_numbers[0] }}" data-index="1">{{ dispatch.container_numbers[0] }}</option>
+                <option value="{{ dispatch.container_numbers[1] }}" data-index="2">{{ dispatch.container_numbers[1] }}</option>
+                <option value="{{ dispatch.container_numbers[2] }}" data-index="3">{{ dispatch.container_numbers[2] }}</option>
+              </select>
+            </div>
+            <div class="form-date">
+              Date <input type="date" name="task_date_{{ priority }}" value="{{ date }}" required>
+            </div>
+            <div class="form-appointment">
+              {% set ApptTypes = [
+                  'open', 'exact_time',
+                  'time_window', 'ready_after','finish_before'
+              ] %}
+              Appointment Type <select name="task_type_{{ priority }}">
+                  <option value="">Appt Type</option>
+                  {% for at in ApptTypes %}
+                  <option value="{{ at }}" {% if appointment_type == at %}selected{% endif %}>
+                      {{ at.replace('_', ' ').title() }}
+                  </option>
+                  {% endfor %}
+              </select><br><br>
+              <span>Start <input type="time" name="task_start_time_{{ priority }}" value="{{ start_time }}"></span>
+              <span>End <input type="time" name="task_end_time_{{ priority }}" value="{{ end_time }}"></span>
+            </div>
+          </div>
+          {% endmacro %}
+          {% for task in dispatch.plan %}
+            {{ task_card(
+              task.priority, task.location_name, task.instruction, 
+              task.date, task.appointment_type, task.start_time, 
+              task.end_time) 
+            }}
+          {% endfor %}
+          <div>
+            <button type="button" class="add-task-btn">Add Task</button>
+          </div>
+        </div>
+        <p><button type="submit" class="modal-submit js-modal-submit">Submit</button></p>
       </form>
     </div>
-  </div> #}
+  </div>
 
-  {# <div class="modal" id="activation-{{ dispatch.id }}-modal">
+  {# <div class="modal hidden js-modal" id="activation-{{ dispatch.id }}-modal">
     <div class="modal-backdrop"></div>
     <div class="modal-body">
-      <button class="modal-close" href="#activation-{{ dispatch.id }}-modal">close</button>
+      <button class="modal-close" data-modal-target="#activation-{{ dispatch.id }}-modal">close</button>
       {% if dispatch.status == 'ACTIVE' %}
       <h2>Deactivating Dispatch: {{ dispatch.name }}</h2>
       <form action="{{ url_for('dispatch.deactivate') }}" method="post">
@@ -67,7 +142,7 @@
         </p>
         <input type="hidden" name="id" value="{{ dispatch.id }}">
         <p>
-          <button type="submit" class="modal-submit">Activate</button>
+          <button type="submit" class="modal-submit js-modal-submit">Activate</button>
         </p>
       </form>
       {% endif %}

@@ -2,10 +2,11 @@ from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
 
-from click import Option
+from src.domain.aggregates.driver.aggregate import Driver
 
-from src.domain.common.entity import Entity
 from .value_objects import Appointment, Container, Instruction, TaskStatus
+from src.domain.aggregates.location.aggregate import Location
+from src.domain.common.entity import Entity
 
 
 class Task(Entity):
@@ -14,21 +15,21 @@ class Task(Entity):
             priority: int,
             instruction: Instruction,
             date: date,
+            location: Optional[Location] = None, 
             container: Optional[Container] = None,
-            location_ref: Optional[UUID] = None, 
             appointment: Optional[Appointment] = None
             ):
         super().__init__()
         self._status = TaskStatus.NOT_STARTED
         self.priority = priority
         self.instruction = instruction
-        self.location_ref = location_ref
         self.date = date
-        self._check_in_datetime = None
-        self._check_out_datetime = None
-        self.appointment = appointment
+        self.location = location
         self.container = container
-        self.completed_by = None
+        self.appointment = appointment
+        self._completed_by: Optional[Driver] = None
+        self._check_in_datetime: Optional[datetime] = None
+        self._check_out_datetime: Optional[datetime] = None
 
     @property
     def status(self) -> TaskStatus:
@@ -37,21 +38,21 @@ class Task(Entity):
     def start(self) -> None:
         if self._status != TaskStatus.NOT_STARTED:
             raise ValueError('Only tasks not started can be started.')
-        if isinstance(self.location_ref, str):
+        if isinstance(self.location, str):
             raise ValueError('Cannot start a task without a location set.')
         
         self._status = TaskStatus.IN_PROGRESS
         self._check_in_datetime = datetime.now()
 
-    def complete(self, driver_ref: UUID) -> None:
+    def complete(self, driver: Driver) -> None:
         if self._status != TaskStatus.IN_PROGRESS:
             raise ValueError('Only tasks in progress can be completed.')
         
         self._status = TaskStatus.COMPLETED
-        self.completed_by = driver_ref
+        self._completed_by = driver
         self._check_out_datetime = datetime.now()
 
-    def stopoff(self, driver_ref: UUID):
+    def stopoff(self, driver: Driver):
         if self._status not in (TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS):
             raise ValueError('Only tasks not started or in progress can be marked stopoff.')
         
@@ -64,7 +65,7 @@ class Task(Entity):
             raise ValueError('Task instruction is incompatible with being marked stop off.')
         
         self._status = TaskStatus.STOP_OFF
-        self.completed_by = driver_ref
+        self._completed_by = driver
         self._check_out_datetime = datetime.now()
 
     def revert_status(self) -> None:
@@ -79,14 +80,14 @@ class Task(Entity):
         if self._status == TaskStatus.COMPLETED:
             self._status = TaskStatus.IN_PROGRESS
             self._check_out_datetime = None
-            self.completed_by = None
+            self._completed_by = None
             return
         
         if self._status == TaskStatus.STOP_OFF:
             self._status = TaskStatus.NOT_STARTED
             self._check_in_datetime = None
             self._check_out_datetime = None
-            self.completed_by = None
+            self._completed_by = None
             return
         
     def set_appointment(self, appointment: Appointment) -> None:

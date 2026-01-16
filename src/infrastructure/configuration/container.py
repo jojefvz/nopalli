@@ -6,7 +6,8 @@ from src.application.use_cases.broker_use_cases import (
     CreateBrokerUseCase,
     DeactivateBrokerUseCase,
     ActivateBrokerUseCase,
-    EditBrokerUseCase
+    EditBrokerUseCase,
+    ActiveBrokersUseCase
 )
 from src.application.use_cases.dispatch_use_cases import (
     CreateDispatchUseCase,
@@ -18,7 +19,10 @@ from src.application.use_cases.driver_use_cases import (
     CreateDriverUseCase,
     DeactivateDriverUseCase,
     ActivateDriverUseCase,
-    EditDriverUseCase
+    EditDriverUseCase,
+    MakeAvailableDriverUseCase,
+    SitOutDriverUseCase,
+    AvailableAndOperatingDriversUseCase
 )
 from src.application.use_cases.location_use_cases import (
     ListLocationsUseCase,
@@ -26,6 +30,9 @@ from src.application.use_cases.location_use_cases import (
     DeactivateLocationUseCase,
     ActivateLocationUseCase,
     EditLocationUseCase,
+)
+from src.application.use_cases.task_use_cases import (
+    CreateTaskUseCase,
 )
 from src.application.repositories.broker_repository import BrokerRepository
 from src.interfaces.controllers.broker_controller import BrokerController
@@ -39,13 +46,17 @@ from src.interfaces.presenters.driver_presenter import DriverPresenter
 from src.application.repositories.location_repository import LocationRepository
 from src.interfaces.controllers.location_controller import LocationController
 from src.interfaces.presenters.location_presenter import LocationPresenter
+from src.application.repositories.task_repository import TaskRepository
+from src.interfaces.controllers.task_controller import TaskController
+from src.interfaces.presenters.task_presenter import TaskPresenter
 
 
 def create_application(
         broker_presenter: BrokerPresenter,
         dispatch_presenter: DispatchPresenter,
         driver_presenter: DriverPresenter,
-        location_presenter: LocationPresenter
+        location_presenter: LocationPresenter,
+        task_presenter: TaskPresenter
 ) -> "Application":
     """
     Factory function for the Application container.
@@ -64,7 +75,8 @@ def create_application(
         broker_repository,
         dispatch_repository,
         driver_repository,
-        location_repository
+        location_repository,
+        task_repository,
     ) = create_repositories()
 
     return Application(
@@ -75,7 +87,9 @@ def create_application(
         driver_repository=driver_repository,
         driver_presenter=driver_presenter,
         location_repository=location_repository,
-        location_presenter=location_presenter
+        location_presenter=location_presenter,
+        task_repository=task_repository,
+        task_presenter=task_presenter,
     )
 
 @dataclass
@@ -90,6 +104,8 @@ class Application:
     driver_presenter: DriverPresenter
     location_repository: LocationRepository
     location_presenter: LocationPresenter
+    task_repository: TaskRepository
+    task_presenter: TaskPresenter
     
 
     def __post_init__(self):
@@ -100,13 +116,17 @@ class Application:
         self.deactivate_broker_use_case = DeactivateBrokerUseCase(self.broker_repository)
         self.activate_broker_use_case = ActivateBrokerUseCase(self.broker_repository)
         self.edit_broker_use_case = EditBrokerUseCase(self.broker_repository)
+        self.active_brokers_use_case = ActiveBrokersUseCase(self.broker_repository)
 
         # configure driver use cases
         self.list_drivers_use_case = ListDriversUseCase(self.driver_repository)
         self.create_driver_use_case = CreateDriverUseCase(self.driver_repository)
+        self.sit_out_driver_use_case = SitOutDriverUseCase(self.driver_repository)
+        self.make_available_driver_use_case = MakeAvailableDriverUseCase(self.driver_repository)
         self.deactivate_driver_use_case = DeactivateDriverUseCase(self.driver_repository)
         self.activate_driver_use_case = ActivateDriverUseCase(self.driver_repository)
         self.edit_driver_use_case = EditDriverUseCase(self.driver_repository)
+        self.available_and_operating_drivers_use_case = AvailableAndOperatingDriversUseCase(self.driver_repository)
 
         # configure dispatch use cases
         self.list_dispatches_use_case = ListDispatchesUseCase(self.dispatch_repository)
@@ -125,6 +145,9 @@ class Application:
         self.activate_location_use_case = ActivateLocationUseCase(self.location_repository)
         self.edit_location_use_case = EditLocationUseCase(self.location_repository)
 
+        # configure task use cases
+        self.create_task_use_case = CreateTaskUseCase(self.task_repository)
+
         # wire up broker controller
         self.broker_controller = BrokerController(
             self.list_brokers_use_case,
@@ -132,7 +155,8 @@ class Application:
             self.deactivate_broker_use_case,
             self.activate_broker_use_case,
             self.edit_broker_use_case,
-            self.broker_presenter
+            self.active_brokers_use_case,
+            self.broker_presenter,
             )
         
         # wire up dispatch controller
@@ -147,9 +171,12 @@ class Application:
         self.driver_controller = DriverController(
             self.list_drivers_use_case,
             self.create_driver_use_case,
+            self.sit_out_driver_use_case,
+            self.make_available_driver_use_case,
             self.deactivate_driver_use_case,
             self.activate_driver_use_case,
             self.edit_driver_use_case,
+            self.available_and_operating_drivers_use_case,
             self.driver_presenter
             )
         
@@ -162,3 +189,9 @@ class Application:
             self.edit_location_use_case,
             self.location_presenter
             )
+
+        # wire up task controller
+        self.task_controller = TaskController(
+            self.create_task_use_case,
+            self.task_presenter
+        )

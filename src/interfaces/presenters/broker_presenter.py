@@ -28,7 +28,7 @@ class WebBrokerPresenter(BrokerPresenter):
         return BrokerViewModel(
             id=broker_response.id,
             name=broker_response.name,
-            status=broker_response.status,
+            status=broker_response.status.capitalize(),
             street_address=broker_response.street_address,
             city=broker_response.city,
             state=broker_response.state,

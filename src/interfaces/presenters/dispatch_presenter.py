@@ -30,8 +30,11 @@ class WebDispatchPresenter(DispatchPresenter):
         """Format dispatch for web display."""
         return DispatchViewModel(
             id=dispatch_response.id,
-            status=dispatch_response.status,
-            containers=[con.number for con in dispatch_response.containers],
+            reference=str(dispatch_response.reference),
+            status=dispatch_response.status.value.capitalize(),
+            broker_name=dispatch_response.broker.name,
+            driver_name=dispatch_response.driver.name if dispatch_response.driver else None,
+            container_numbers=dispatch_response.container_numbers,
             plan=[self.task_presenter.present_task(task) for task in dispatch_response.plan]
         )
 

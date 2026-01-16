@@ -1,10 +1,11 @@
-from typing import final
+from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import sessionmaker
 
 from src.domain.aggregates.location.aggregate import Location
+from src.domain.aggregates.location.value_objects import Address
 from src.domain.exceptions import LocationNotFoundError
 from src.application.repositories.location_repository import LocationRepository
 
@@ -30,10 +31,60 @@ class SQLAlchemyLocationRepository(LocationRepository):
 
         try:
             if location := session.get(Location, location_id):
+                session.expunge(location)
                 return location
             raise LocationNotFoundError(location_id)
         finally:
             session.close()
+
+    def get_by_name(self, location_name: str, location_id: Optional[UUID] = None) -> Location:
+        session = self.session_factory()
+
+        try:
+            if location_id:
+                stmt = select(Location).where(and_(
+                    Location.id != location_id,
+                    Location.name == location_name
+                    )
+                )
+            else:
+                stmt = select(Location).where(Location.name == location_name)
+
+            if location := session.scalars(stmt).first():
+                session.expunge(location)
+            return location
+
+        finally:
+            session.close()
+
+    def get_by_address(self, address: Address, location_id: Optional[UUID] = None) -> Location:
+        session = self.session_factory()
+
+        try:
+            if location_id:
+                stmt = select(Location).where(and_(
+                    Location.id != location_id,
+                    Location.street_address == address.street_address,
+                    Location.city == address.city,
+                    Location.state == address.state,
+                    Location.zipcode == address.zipcode,
+                    )
+                )
+            else:
+                stmt = select(Location).where(and_(
+                        Location.street_address == address.street_address,
+                        Location.city == address.city,
+                        Location.state == address.state,
+                        Location.zipcode == address.zipcode,
+                    )
+                )
+            if location := session.scalars(stmt).first():
+                session.expunge(location)
+            return location
+
+        finally:
+            session.close()
+
 
     def get_all(self) -> list[Location]:
         """
@@ -43,6 +94,7 @@ class SQLAlchemyLocationRepository(LocationRepository):
 
         try:
             locations = session.scalars(select(Location)).all()
+            session.expunge_all()
             return locations
         finally:
             session.close()
@@ -59,6 +111,8 @@ class SQLAlchemyLocationRepository(LocationRepository):
         try:
             session.add(location)
             session.commit()
+            session.refresh(location)
+            session.expunge(location)
         finally:
             session.close()
 

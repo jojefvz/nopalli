@@ -8,6 +8,7 @@ from src.application.dtos.location_dtos import (
     ActivateLocationRequest,
     EditLocationRequest,
     )
+from src.application.repositories import location_repository
 from src.application.repositories.location_repository import LocationRepository
 from src.domain.aggregates.location.aggregate import Location
 from src.domain.exceptions import ValidationError, BusinessRuleViolation
@@ -24,6 +25,12 @@ class CreateLocationUseCase:
         try:
             params = request.to_execution_params()
 
+            if self.location_repository.get_by_name(params['name']):
+                raise BusinessRuleViolation('A location with that name already exists.')
+            
+            if self.location_repository.get_by_address(params['address']):
+                raise BusinessRuleViolation('A location with that address already exists.')
+            
             location = Location(
                 name=params['name'],
                 address=params['address'],
@@ -74,6 +81,8 @@ class DeactivateLocationUseCase:
 
             location.deactivate()
 
+            self.location_repository.save(location)
+
             return Result.success(LocationResponse.from_entity(location))
 
         except ValidationError as e:
@@ -97,6 +106,8 @@ class ActivateLocationUseCase:
 
             location.reactivate()
 
+            self.location_repository.save(location)
+
             return Result.success(LocationResponse.from_entity(location))
 
         except ValidationError as e:
@@ -116,12 +127,20 @@ class EditLocationUseCase:
         try:
             params = request.to_execution_params()
 
+            if self.location_repository.get_by_name(params['name'], params['id']):
+                raise BusinessRuleViolation('A location with that name already exists.')
+            
+            if self.location_repository.get_by_address(params['address'], params['id']):
+                raise BusinessRuleViolation('A location with that address already exists.')
+
             id = params["id"]
 
             location = self.location_repository.get(id)
 
             location.name = params["name"]
             location.address = params["address"]
+
+            self.location_repository.save(location)
 
             return Result.success(LocationResponse.from_entity(location))
 

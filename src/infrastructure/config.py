@@ -46,7 +46,7 @@ class Config:
     
     @classmethod
     def get_session_factory(cls) -> sessionmaker:
-        db_url = os.getenv('NOPALLI_DATABASE_URL', cls.DEFAULT_DATABASE_URL.value)
+        db_url = os.getenv('NOPALLI_DATABASE_URL', cls.DEFAULT_DATABASE_URL)
         engine = create_engine(db_url, echo=True)
         set_orm_mapping(engine)
         return sessionmaker(bind=engine)

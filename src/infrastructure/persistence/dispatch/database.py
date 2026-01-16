@@ -42,8 +42,9 @@ class SQLAlchemyDispatchRepository(DispatchRepository):
         session = self.session_factory()
 
         try:
-            dispatchs = session.scalars(select(Dispatch)).all()
-            return dispatchs
+            dispatches = session.scalars(select(Dispatch)).all()
+            session.expunge_all()
+            return dispatches
         finally:
             session.close()
 
@@ -59,6 +60,8 @@ class SQLAlchemyDispatchRepository(DispatchRepository):
         try:
             session.add(dispatch)
             session.commit()
+            session.refresh(dispatch)
+            session.expunge(dispatch)
         finally:
             session.close()
 

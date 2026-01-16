@@ -1,8 +1,8 @@
+from itertools import count
 from typing import Optional
-from uuid import UUID
 
+from src.domain.aggregates.broker.aggregate import Broker
 from src.domain.aggregates.driver.aggregate import Driver
-from tests import dispatch
 
 from src.domain.common.entity import AggregateRoot
 from .entities import Instruction, Task
@@ -17,28 +17,32 @@ MAXIMUM_CONTAINERS_PER_DISPATCH = 4
 class Dispatch(AggregateRoot):
     def __init__(
             self, 
-            broker_ref,
-            containers: list[Container], 
+            broker: Broker,
             plan: list[Task],
-            driver_ref: Optional[Driver] = None
+            driver: Optional[Driver] = None
             ):
         super().__init__()
+        self.reference = None
         self._status = DispatchStatus.DRAFT
-        self.broker_ref = broker_ref
-        self.containers = containers
+        self.broker = broker
         self.plan = plan
-        self.driver_ref = driver_ref
+        self.driver = driver
         
     @property
     def status(self):
         return self._status
+    
+    @property
+    def containers(self):
+        container_numbers = [task.container.number for task in self.plan if task.container.number]
+        return list(dict.fromkeys(container_numbers))
 
     def start(self) -> None:
         self._verify_dispatch_before_starting()
         self._status = DispatchStatus.IN_PROGRESS
 
     def _verify_dispatch_before_starting(self) -> None:
-        if not self.driver_ref:
+        if not self.driver:
             raise ValueError('A driver has not been assigned to dispatch.')
         if not self._appointment_exists():
             raise ValueError('An appointment has not been set on at least one task.')
@@ -146,7 +150,7 @@ class Dispatch(AggregateRoot):
         if self.status != DispatchStatus.IN_PROGRESS:
             raise ValueError('Only a dispatch in progress can complete a task.')
         
-        self.get_task(priority).complete(self.driver_ref)
+        self.get_task(priority).complete(self.driver)
     
     def revert_task(self, priority: int) -> None:
         if self.status != DispatchStatus.IN_PROGRESS:
@@ -158,7 +162,7 @@ class Dispatch(AggregateRoot):
         if self.status != DispatchStatus.IN_PROGRESS:
             raise ValueError('Only a dispatch in progress can mark a task as stopoff.')
         
-        self.get_task(priority).stopoff(self.driver_ref)
+        self.get_task(priority).stopoff(self.driver)
 
     def get_task(self, priority: int):
         return self.plan[priority - 1]

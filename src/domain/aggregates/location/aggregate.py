@@ -3,7 +3,6 @@ from src.domain.common.entity import AggregateRoot
 from src.domain.exceptions import BusinessRuleViolation
 
 
-
 class Location(AggregateRoot):
     def __init__(self, name: str, address: Address):
         super().__init__()

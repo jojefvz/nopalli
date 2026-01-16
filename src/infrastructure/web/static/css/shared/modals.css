@@ -2,30 +2,40 @@
     position: fixed;
     top: 0;
     right: 0;
-    bottom: 0;
-    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
     background-color: rgba(0, 0, 0, .5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-.modal-body {
-    position: fixed;
-    top: 3em;
-    bottom: 3em;
-    right: 20%;
-    left: 20%;
+.modal-content {
+    max-width: 500px;
+    border-radius: 8px;
     padding: 2em 3em;
     background-color: white;
-    overflow: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease;
 }
 
-.modal-open {
-    padding: .5em 1em;
-    border: none;
-    margin-right: 1em;
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-.modal-open.edit {
-    padding: .3em .8em;
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .modal-close {
@@ -41,22 +51,4 @@
     text-indent: 10em;
     overflow: hidden;
     border: 0;
-}
-
-.modal-close::after {
-    position: absolute;
-    line-height: .5;
-    top: .2em;
-    left: .1em;
-    text-indent: 0;
-    content: "\00D7";
-}
-
-.modal-submit {
-    padding: .5em 1em;
-    border: 0;
-}
-
-.hidden {
-  display: none;
 }

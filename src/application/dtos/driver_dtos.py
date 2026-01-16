@@ -28,6 +28,41 @@ class CreateDriverRequest:
 
 
 @dataclass(frozen=True)
+class SitOutDriverRequest:
+    """Sit out a driver."""
+
+    id: str
+
+    def __post_init__(self) -> None:
+        """Validate request data"""
+        if not UUID(self.id, version=4):
+            raise ValidationError('Driver id is not of uuid4 format.')
+
+    def to_execution_params(self) -> dict:
+        """Convert request data to use case parameters."""
+        return {
+            "id": UUID(self.id)
+        }
+    
+
+@dataclass(frozen=True)
+class MakeAvailableDriverRequest:
+    """Make a driver available."""
+
+    id: str
+
+    def __post_init__(self) -> None:
+        """Validate request data"""
+        if not UUID(self.id, version=4):
+            raise ValidationError('Driver id is not of uuid4 format.')
+
+    def to_execution_params(self) -> dict:
+        """Convert request data to use case parameters."""
+        return {
+            "id": UUID(self.id)
+        }
+
+@dataclass(frozen=True)
 class DeactivateDriverRequest:
     """Deactivate a driver."""
 

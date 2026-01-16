@@ -2,41 +2,20 @@
 Flask routes for Brokers.
 """
 
-from flask import jsonify, render_template, request, redirect, url_for, current_app, flash
+from flask import flash, jsonify, redirect, render_template, request, current_app, url_for
 
 from src.infrastructure.web.routes.broker import bp
 
 
-@bp.route("/brokers")
-def list_brokers():
-    """List all brokers."""
-    app = current_app.config["APP_CONTAINER"]
-
-    result = app.broker_controller.handle_list()
-    # if not result.is_success:
-    #     error = app.broker_presenter.present_error(result.error.message)
-    #     flash(error.message, "error")
-    #     return redirect(url_for("todo.index"))
-
-    return render_template("brokers/brokers.html", brokers=result.success)
-
-@bp.route("/api/brokers")
-def get_brokers():
-    app = current_app.config["APP_CONTAINER"]
-
-    result = app.broker_controller.handle_list()
-
-    return jsonify(result.success)
-
-
-@bp.route("/brokers/new", methods=["POST"])
-def new_broker():
+@bp.post("/brokers")
+def create_broker():
     """Create a new broker."""
     name = request.form["name"]
     street_address = request.form["street_address"]
     city = request.form["city"]
     state = request.form["state"]
     zipcode = request.form["zipcode"]
+
     app = current_app.config["APP_CONTAINER"]
     result = app.broker_controller.handle_create(
         name,
@@ -47,54 +26,31 @@ def new_broker():
     )
 
     if not result.is_success:
-        error = app.broker_presenter.present_error(result.error.message)
-        flash(error.message, "error")
-        return redirect(url_for("broker.list_brokers"))
-
-    # Use view model directly from controller response
-    # broker = result.success
-    # flash(f'Location "{broker.name}" created successfully', "success")
-
-    return redirect(url_for("broker.list_brokers"))
-
-@bp.route("/brokers/deactivate", methods=['POST'])
-def deactivate():
-    id = request.form['id']
-
-    app = current_app.config['APP_CONTAINER']
-    result = app.broker_controller.handle_deactivate(id)
-
-    if not result.is_success:
-        error = app.broker_presenter.present_error(result.error.message)
-        flash(error.message, "error")
-        return redirect(url_for("broker.list_brokers"))
-
-    return redirect(url_for('broker.list_brokers'))
-
-@bp.route("/brokers/activate", methods=['POST'])
-def activate():
-    id = request.form['id']
-
-    app = current_app.config['APP_CONTAINER']
-    result = app.broker_controller.handle_activate(id)
-
-    if not result.is_success:
-        error = app.broker_presenter.present_error(result.error.message)
-        flash(error.message, "error")
-        return redirect(url_for("broker.list_brokers"))
-
-    return redirect(url_for('broker.list_brokers'))
+        flash(f'Error: {result.error.message}', 'error')
+    else:
+        flash(f'Created broker: {result.success.name}', 'success')
+    return redirect(url_for('broker.index'))
 
 
-@bp.route("/brokers/edit", methods=["POST"])
-def edit_broker():
+@bp.get("/brokers")
+def index():
+    """List all brokers."""
+    app = current_app.config["APP_CONTAINER"]
+
+    result = app.broker_controller.handle_list()
+
+    return render_template("brokers/brokers.html", brokers=result.success)
+
+
+@bp.post("/brokers/<id>/edit")
+def edit_broker(id):
     """Edit broker data."""
-    id = request.form["id"]
-    name = request.form["name"]
-    street_address = request.form["street_address"]
-    city = request.form["city"]
-    state = request.form["state"]
-    zipcode = request.form["zipcode"]
+    name = request.form['name']
+    street_address = request.form['street_address']
+    city = request.form['city']
+    state = request.form['state']
+    zipcode = request.form['zipcode']
+
     app = current_app.config["APP_CONTAINER"]
     result = app.broker_controller.handle_edit(
         id,
@@ -106,12 +62,39 @@ def edit_broker():
     )
 
     if not result.is_success:
-        error = app.broker_presenter.present_error(result.error.message)
-        flash(error.message, "error")
-        return redirect(url_for("broker.list_brokers"))
+        flash(f'Error: {result.error.message}', 'error')
+    else:
+        flash(f'Edited broker: {result.success.name}', 'success')
+    return redirect(url_for('broker.index'))
 
-    # # Use view model directly from controller response
-    # # broker = result.success
-    # # flash(f'Location "{broker.name}" created successfully', "success")
 
-    return redirect(url_for("broker.list_brokers"))
+@bp.post("/brokers/<id>/deactivation")
+def deactivate(id):
+    app = current_app.config['APP_CONTAINER']
+    result = app.broker_controller.handle_deactivate(id)
+
+    if not result.is_success:
+        flash(f'Error: {result.error.message}', 'error')
+    else:
+        flash(f'Deactivated broker: {result.success.name}', 'success')
+    return redirect(url_for('broker.index'))
+
+
+@bp.post("/brokers/<id>/activation")
+def activate(id):
+    app = current_app.config['APP_CONTAINER']
+    result = app.broker_controller.handle_activate(id)
+
+    if not result.is_success:
+        flash(f'Error: {result.error.message.message}', 'error')
+    else:
+        flash(f'Activated broker: {result.success.name}', 'success')
+    return redirect(url_for('broker.index'))
+
+@bp.get("/api/brokers/active")
+def get_active_brokers():
+    app = current_app.config["APP_CONTAINER"]
+
+    result = app.broker_controller.handle_active_brokers()
+
+    return jsonify(result.success)
