@@ -152,7 +152,7 @@ class EditLocationUseCase:
 
 @dataclass
 class GetLocationUseCase:
-    """Use case for creating a new location."""
+    """Use case for retrieving a new location."""
 
     location_repository: LocationRepository
 
@@ -176,3 +176,21 @@ class GetLocationUseCase:
             return Result.failure(Error.business_rule_violation(str(e)))
         
 
+@dataclass
+class ActiveLocationsUseCase:
+    location_repository: LocationRepository
+
+    def execute(self) -> Result[list[LocationResponse]]:
+        """
+        List all locations.
+
+        Returns:
+            Result containing either:
+            - Success: List of LocationResponse objects
+            - Failure: Error information
+        """
+        try:
+            locations = self.location_repository.get_active()
+            return Result.success([LocationResponse.from_entity(l) for l in locations])
+        except BusinessRuleViolation as e:
+            return Result.failure(Error.business_rule_violation(str(e)))

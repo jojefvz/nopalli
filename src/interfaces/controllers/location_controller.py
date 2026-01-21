@@ -33,7 +33,8 @@ from src.application.use_cases.location_use_cases import (
     CreateLocationUseCase,
     DeactivateLocationUseCase,
     ActivateLocationUseCase,
-    EditLocationUseCase
+    EditLocationUseCase,
+    ActiveLocationsUseCase
 )
 
 
@@ -63,6 +64,7 @@ class LocationController:
     deactivate_use_case: DeactivateLocationUseCase
     activate_use_case: ActivateLocationUseCase
     edit_use_case: EditLocationUseCase
+    active_locations_use_case: ActiveLocationsUseCase
     presenter: LocationPresenter
 
     def handle_create(
@@ -220,3 +222,13 @@ class LocationController:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
+
+    def handle_active_locations(self) -> OperationResult[list[LocationViewModel]]:
+        result = self.active_locations_use_case.execute()
+
+        if result.is_success:
+            view_models = [self.presenter.present_location(loc) for loc in result.value]
+            return OperationResult.succeed(view_models)
+
+        error_vm = self.presenter.present_error(result.error.message, str(result.error.code.name))
+        return OperationResult.fail(error_vm.message, error_vm.code)

@@ -12,7 +12,7 @@
   margin: 0;
   font-size: 28px;
   cursor: pointer;
-  color: black;
+  color: #666;
   line-height: 1;
   padding: 0;
   width: 30px;
@@ -21,12 +21,19 @@
 
 .form-field {
   display: flex;
-  justify-content: space-between;
-  column-gap: 4em;
+  flex-direction: column;
+  margin-bottom: 1em;
 }
 
-.form-field input, select {
+.form-field label {
+    margin-bottom: 0.5em; /* ADD spacing between label and input */
+    font-weight: 500; /* Optional: make labels stand out */
+}
+
+.form-field input, 
+.form-field select {
   margin: 0;
+  padding: 0.5em; /* ADD some padding for better UX */
 }
 
 .flash-message {
@@ -74,3 +81,64 @@
 .dropdown-option:hover {
   background-color: #f0f0f0;
 }
+
+.input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.input-group input {
+  flex: 1;
+}
+
+.btn-add {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.btn-add:hover {
+  background-color: #218838;
+}
+
+.btn-remove {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-remove:hover {
+  background-color: #c82333;
+}
+
+.stops-section {
+  margin-top: 20px;
+}
+
+.stop-container {
+  border: 1px solid #ddd;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.stop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stop-header h3 {
+  margin: 0;
+}
+

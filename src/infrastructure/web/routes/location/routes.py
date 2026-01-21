@@ -90,3 +90,12 @@ def activate(id):
     else:
         flash(f'Activated location: {result.success.name}', 'success')
     return redirect(url_for('location.index'))
+
+
+@bp.get("/api/locations/active")
+def get_active_locations():
+    app = current_app.config["APP_CONTAINER"]
+
+    result = app.location_controller.handle_active_locations()
+
+    return jsonify(result.success)

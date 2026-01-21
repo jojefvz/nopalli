@@ -30,6 +30,7 @@ from src.application.use_cases.location_use_cases import (
     DeactivateLocationUseCase,
     ActivateLocationUseCase,
     EditLocationUseCase,
+    ActiveLocationsUseCase
 )
 from src.application.use_cases.task_use_cases import (
     CreateTaskUseCase,
@@ -144,6 +145,7 @@ class Application:
         self.deactivate_location_use_case = DeactivateLocationUseCase(self.location_repository)
         self.activate_location_use_case = ActivateLocationUseCase(self.location_repository)
         self.edit_location_use_case = EditLocationUseCase(self.location_repository)
+        self.active_locations_use_case = ActiveLocationsUseCase(self.location_repository)
 
         # configure task use cases
         self.create_task_use_case = CreateTaskUseCase(self.task_repository)
@@ -187,6 +189,7 @@ class Application:
             self.deactivate_location_use_case,
             self.activate_location_use_case,
             self.edit_location_use_case,
+            self.active_locations_use_case,
             self.location_presenter
             )
 

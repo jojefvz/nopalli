@@ -5,6 +5,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.orm import sessionmaker
 
 from src.domain.aggregates.location.aggregate import Location
+from src.domain.aggregates.location.value_objects import LocationStatus
 from src.domain.aggregates.location.value_objects import Address
 from src.domain.exceptions import LocationNotFoundError
 from src.application.repositories.location_repository import LocationRepository
@@ -95,6 +96,24 @@ class SQLAlchemyLocationRepository(LocationRepository):
         try:
             locations = session.scalars(select(Location)).all()
             session.expunge_all()
+            return locations
+        finally:
+            session.close()
+
+    def get_active(self) -> list[Location]:
+        """
+        Retrieve all active locations.
+        """
+        session = self.session_factory()
+
+        try:
+            stmt = select(Location).where(Location._status == LocationStatus.ACTIVE)
+
+            locations = session.scalars(stmt).all()
+            print("ACITVE LOCATIONS", locations)
+
+            session.expunge_all()
+
             return locations
         finally:
             session.close()
