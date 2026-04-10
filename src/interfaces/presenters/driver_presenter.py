@@ -27,8 +27,10 @@ class WebDriverPresenter(DriverPresenter):
         """Format driver for web display."""
         return DriverViewModel(
             id=driver_response.id,
-            name=driver_response.name,
             status=driver_response.status.capitalize(),
+            first_name=driver_response.first_name,
+            last_name=driver_response.last_name,
+            nickname=driver_response.nickname,
         )
 
     def present_error(self, error_msg: str, code: Optional[str] = None) -> ErrorViewModel:

@@ -19,14 +19,24 @@ from dataclasses import dataclass
 
 from src.application.dtos.dispatch_dtos import (
     CreateDispatchRequest,
+    GetDispatchRequest,
+    EditDispatchRequest,
+    StartDispatchRequest
     )
 from src.application.use_cases.dispatch_use_cases import (
     CreateDispatchUseCase,
     ListDispatchesUseCase,
+    GetDispatchUseCase,
+    EditDispatchUseCase,
+    StartDispatchUseCase
 )
 from src.domain.exceptions import ValidationError
 from src.interfaces.presenters.dispatch_presenter import DispatchPresenter
-from src.interfaces.view_models.dispatch_vm import DispatchViewModel
+from src.interfaces.view_models.dispatch_vm import (
+    DispatchViewModel,
+    EditDispatchViewModel,
+    DispatchSuccessViewModel
+)
 from src.interfaces.view_models.base import OperationResult
 
 
@@ -53,6 +63,9 @@ class DispatchController:
 
     create_use_case: CreateDispatchUseCase
     list_use_case: ListDispatchesUseCase
+    get_dispatch_use_case: GetDispatchUseCase
+    edit_use_case: EditDispatchUseCase
+    start_dispatch_use_case: StartDispatchUseCase
     presenter: DispatchPresenter
 
     # def handle_list(self) -> OperationResult[list[DispatchViewModel]]:
@@ -70,7 +83,7 @@ class DispatchController:
             broker_id: str,
             driver_id: str,
             plan: list[dict]
-        ) -> OperationResult[DispatchViewModel]:
+        ) -> OperationResult[DispatchSuccessViewModel]:
         """
         Handle dispatch creation requests from any interface.
 
@@ -105,7 +118,7 @@ class DispatchController:
 
             if result.is_success:
                 # Convert domain response to view model
-                view_model = self.presenter.present_dispatch(result.value)
+                view_model = self.presenter.present_dispatch_success(result.value)
                 return OperationResult.succeed(view_model)
 
             # Handle domain errors
@@ -127,6 +140,7 @@ class DispatchController:
             # Ensures data entering the application layer is properly formatted and validated
 
             # Execute use case and get domain-oriented result
+            
             result = self.list_use_case.execute()
 
             if result.is_success:
@@ -144,3 +158,111 @@ class DispatchController:
             # Handle validation errors
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
+        
+    def handle_get_dispatch(self, dispatch_id: str) -> OperationResult[EditDispatchViewModel]:
+        try:
+            # Convert primitive input to use case request model specifically designed for the
+            # Interface->Application boundary crossing
+            # It contains validation specific to application needs
+            # Ensures data entering the application layer is properly formatted and validated
+
+            # Execute use case and get domain-oriented result
+            request = GetDispatchRequest(dispatch_id=dispatch_id)
+
+            result = self.get_dispatch_use_case.execute(request)
+
+            if result.is_success:
+                # Convert domain response to view model
+                view_model = self.presenter.present_edit_dispatch(result.value)
+                return OperationResult.succeed(view_model)
+
+            # Handle domain errors
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+    def handle_edit(
+            self,
+            dispatch_id: str,
+            broker_id: str,
+            driver_id: str,
+            plan: list[dict]
+        ) -> OperationResult[DispatchSuccessViewModel]:
+        """
+        Handle dispatch edit requests from any interface.
+
+        This method demonstrates Clean Architecture's separation of concerns by:
+        1. Accepting primitive types as input (making it interface-agnostic)
+        2. Converting input into the use case's required format
+        3. Executing the use case without knowing its implementation details
+        4. Using a presenter to format the response appropriately
+
+        Args:
+            title: The dispatch title
+            description: The dispatch description
+
+        Returns:
+            OperationResult containing either:
+            - Success: DispatchViewModel formatted for the interface
+            - Failure: Error information formatted for the interface
+        """
+        try:
+            # Convert primitive input to use case request model specifically designed for the
+            # Interface->Application boundary crossing
+            # It contains validation specific to application needs
+            # Ensures data entering the application layer is properly formatted and validated
+            request = EditDispatchRequest(
+                dispatch_id=dispatch_id,
+                broker_id=broker_id,
+                driver_id=driver_id,
+                plan=plan
+                )
+
+            # Execute use case and get domain-oriented result
+            result = self.edit_use_case.execute(request)
+
+            if result.is_success:
+                # Convert domain response to view model
+                view_model = self.presenter.present_dispatch_success(result.value)
+                return OperationResult.succeed(view_model)
+
+            # Handle domain errors
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+    def handle_start_dispatch(self, dispatch_id: str):
+        try:
+            request = StartDispatchRequest(dispatch_id=dispatch_id)
+
+            # Execute use case and get domain-oriented result
+            result = self.edit_use_case.execute(request)
+
+            if result.is_success:
+                # Convert domain response to view model
+                view_model = self.presenter.present_dispatch_success(result.value)
+                return OperationResult.succeed(view_model)
+
+            # Handle domain errors
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        

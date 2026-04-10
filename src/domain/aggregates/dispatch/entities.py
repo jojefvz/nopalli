@@ -1,6 +1,6 @@
+from ctypes import Union
 from datetime import date, datetime
 from typing import Optional
-from uuid import UUID
 
 from src.domain.aggregates.driver.aggregate import Driver
 
@@ -13,19 +13,19 @@ class Task(Entity):
     def __init__(
             self,
             priority: int,
+            location: Location, 
             instruction: Instruction,
+            container: Optional[Container],
             date: date,
-            location: Optional[Location] = None, 
-            container: Optional[Container] = None,
-            appointment: Optional[Appointment] = None
+            appointment: Optional[Appointment]
             ):
         super().__init__()
         self._status = TaskStatus.NOT_STARTED
         self.priority = priority
-        self.instruction = instruction
-        self.date = date
         self.location = location
+        self.instruction = instruction
         self.container = container
+        self.date = date
         self.appointment = appointment
         self._completed_by: Optional[Driver] = None
         self._check_in_datetime: Optional[datetime] = None
@@ -34,6 +34,10 @@ class Task(Entity):
     @property
     def status(self) -> TaskStatus:
         return self._status
+    
+    @property
+    def completed_by(self) -> Optional[str]:
+        return self._completed_by
 
     def start(self) -> None:
         if self._status != TaskStatus.NOT_STARTED:
@@ -49,10 +53,10 @@ class Task(Entity):
             raise ValueError('Only tasks in progress can be completed.')
         
         self._status = TaskStatus.COMPLETED
-        self._completed_by = driver
+        self._completed_by = driver.name
         self._check_out_datetime = datetime.now()
 
-    def stopoff(self, driver: Driver):
+    def stopoff(self, driver: Driver) -> None:
         if self._status not in (TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS):
             raise ValueError('Only tasks not started or in progress can be marked stopoff.')
         
@@ -65,7 +69,7 @@ class Task(Entity):
             raise ValueError('Task instruction is incompatible with being marked stop off.')
         
         self._status = TaskStatus.STOP_OFF
-        self._completed_by = driver
+        self._completed_by = driver.name
         self._check_out_datetime = datetime.now()
 
     def revert_status(self) -> None:

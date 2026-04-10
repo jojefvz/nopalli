@@ -8,7 +8,10 @@ from src.domain.aggregates.dispatch.aggregate import Dispatch
 from src.domain.aggregates.dispatch.entities import Task
 from src.domain.aggregates.driver.aggregate import Driver 
 from src.domain.aggregates.driver.value_objects import DriverStatus
-from src.domain.aggregates.dispatch.value_objects import Appointment, AppointmentType, Container, DispatchStatus, Instruction, TaskStatus
+from src.domain.aggregates.dispatch.value_objects import (
+    Appointment, AppointmentType, Container, 
+    DispatchStatus, Instruction, TaskStatus,
+    ContainerSize)
 from src.domain.aggregates.location.aggregate import Location 
 from src.domain.aggregates.location.value_objects import Address, LocationStatus 
 
@@ -45,7 +48,9 @@ def set_orm_mapping(engine):
         mapper_registry.metadata,
         Column('id', UUID(as_uuid=True), primary_key=True),
         Column('status', Enum(DriverStatus), nullable=False),
-        Column('name', String, nullable=False)
+        Column('first_name', String, nullable=False),
+        Column('last_name', String, nullable=False),
+        Column('nickname', String, nullable=True)
     )
 
     task_table = Table(
@@ -55,10 +60,11 @@ def set_orm_mapping(engine):
         Column('dispatch_id', UUID(as_uuid=True), ForeignKey('dispatches.id'), nullable=False),
         Column('status', Enum(TaskStatus), nullable=False),
         Column('priority', Integer, nullable=False),
+        Column('location_id', UUID(as_uuid=True), ForeignKey('locations.id'), nullable=False),
         Column('instruction', Enum(Instruction), nullable=False),
-        Column('date', Date, nullable=False),
-        Column('location_id', UUID(as_uuid=True), ForeignKey('locations.id'), nullable=True),
         Column('container_number', String, nullable=True),
+        Column('container_size', Enum(ContainerSize), nullable=True),
+        Column('date', Date, nullable=False),
         Column('appointment_type', Enum(AppointmentType), nullable=True),
         Column('appointment_start_time', Time, nullable=True),
         Column('appointment_end_time', Time, nullable=True),
@@ -80,9 +86,8 @@ def set_orm_mapping(engine):
         ),
         Column('status', Enum(DispatchStatus), nullable=False),
         Column('broker_id', UUID(as_uuid=True), ForeignKey('brokers.id'), nullable=False),
-        Column('driver_id', UUID(as_uuid=True), ForeignKey('drivers.id'), nullable=True)
+        Column('driver_id', UUID(as_uuid=True), ForeignKey('drivers.id'), nullable=True),
     )
-
 
 
     def start_mappers():
@@ -131,7 +136,11 @@ def set_orm_mapping(engine):
                    lazy='joined',
                    foreign_keys=[task_table.c.location_id],
                    ),
-                'container': composite(Container, task_table.c.container_number),
+                'container': composite(
+                    Container, 
+                    task_table.c.container_number,
+                    task_table.c.container_size,
+                    ),
                 'appointment': composite(
                     Appointment,
                     task_table.c.appointment_type,
@@ -157,7 +166,7 @@ def set_orm_mapping(engine):
                    foreign_keys=[dispatch_table.c.broker_id],
                    backref=None
                    ),
-                'driver': relationship(
+                'current_driver': relationship(
                    Driver,
                    lazy='joined',
                    foreign_keys=[dispatch_table.c.driver_id],
@@ -174,5 +183,6 @@ def set_orm_mapping(engine):
                 }
             )
     
+
     start_mappers()
     mapper_registry.metadata.create_all(engine)

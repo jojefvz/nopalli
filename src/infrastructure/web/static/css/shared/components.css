@@ -6,6 +6,16 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.anchor {
+  padding: 1em 1.5em;
+  border: none;
+  border-radius: .25em;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  color: black;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -23,6 +33,11 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 1em;
+  width: fit-content;
+}
+
+.form-field > * {
+  margin: 0;
 }
 
 .form-field label {
@@ -30,10 +45,9 @@
     font-weight: 500; /* Optional: make labels stand out */
 }
 
-.form-field input, 
-.form-field select {
-  margin: 0;
-  padding: 0.5em; /* ADD some padding for better UX */
+.form-field select,
+.form-field input {
+  padding: 0.5em;
 }
 
 .flash-message {
@@ -63,7 +77,8 @@
 
 .dropdown-list {
   position: absolute;
-  top: -3px;
+  top: 100%;
+  margin: 0;
   background: white;
   border: 1px solid #ccc;
   max-height: 200px;
@@ -80,16 +95,6 @@
 
 .dropdown-option:hover {
   background-color: #f0f0f0;
-}
-
-.input-group {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.input-group input {
-  flex: 1;
 }
 
 .btn-add {
@@ -110,7 +115,7 @@
   background-color: #dc3545;
   color: white;
   border: none;
-  padding: 8px 12px;
+  padding: 2px 6px;
   cursor: pointer;
   border-radius: 4px;
 }
@@ -119,8 +124,56 @@
   background-color: #c82333;
 }
 
-.stops-section {
-  margin-top: 20px;
+.containers-area {
+  display: flex;
+  flex-direction: column;
+  column-gap: 1em;
+  margin: 0;
+}
+
+.containers-area > * {
+  margin: 0;
+}
+
+.container-item {
+  border: 1px solid #ddd;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  width: fit-content;
+}
+
+.container-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.container-item-header > * {
+  margin: 0;
+}
+
+.container-item-fields {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  column-gap: 1em;
+}
+
+.container-item-fields > * {
+  margin: 0;
+}
+
+.stops-area {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1em;
+}
+
+.stops-area > * {
+  margin: 0;
 }
 
 .stop-container {
@@ -129,6 +182,7 @@
   margin-bottom: 16px;
   border-radius: 4px;
   background-color: #f9f9f9;
+  width: fit-content;
 }
 
 .stop-header {
@@ -138,7 +192,6 @@
   margin-bottom: 16px;
 }
 
-.stop-header h3 {
+.stop-header > * {
   margin: 0;
 }
-

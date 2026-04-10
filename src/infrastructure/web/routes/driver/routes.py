@@ -10,15 +10,21 @@ from src.infrastructure.web.routes.driver import bp
 @bp.post("/drivers")
 def create_driver():
     """Create a new driver."""
-    name = request.form["name"]
+    first_name = request.form["first_name"]
+    last_name = request.form["last_name"]
+    nickname = request.form["nickname"]
 
     app = current_app.config["APP_CONTAINER"]
-    result = app.driver_controller.handle_create(name)
+    result = app.driver_controller.handle_create(
+        first_name,
+        last_name,
+        nickname,
+    )
 
     if not result.is_success:
         flash(f'Error: {result.error.message}', 'error')
     else:
-        flash(f'Successfully created driver: {result.success.name}', 'success')
+        flash(f'Successfully created driver: {result.success.first_name} {result.success.last_name}', 'success')
     return redirect(url_for('driver.index'))
 
 
@@ -35,14 +41,21 @@ def index():
 @bp.post("/drivers/<id>/edit")
 def edit_driver(id):
     """Edit driver data."""
-    name = request.form['name']
+    first_name = request.form['first_name']
+    last_name = request.form['last_name']
+    nickname = request.form['nickname']
     app = current_app.config["APP_CONTAINER"]
-    result = app.driver_controller.handle_edit(id, name)
+    result = app.driver_controller.handle_edit(
+        id,
+        first_name,
+        last_name,
+        nickname,
+    )
 
     if not result.is_success:
         flash(f'Error: {result.error.message}', 'error')
     else:
-        flash(f'Successfully edited driver: {result.success.name}', 'success')
+        flash(f'Successfully edited driver: {result.success.first_name} {result.success.last_name}', 'success')
     return redirect(url_for('driver.index'))
 
 
@@ -54,7 +67,7 @@ def sit_out(id):
     if not result.is_success:
         flash(f'Error: {result.error.message}', 'error')
     else:
-        flash(f'Successfully sat out driver: {result.success.name}', 'success')
+        flash(f'Successfully sat out driver: {result.success.first_name} {result.success.last_name}', 'success')
     return redirect(url_for('driver.index'))
 
 
@@ -66,7 +79,7 @@ def make_available(id):
     if not result.is_success:
         flash(f'Error: {result.error.message}', 'error')
     else:
-        flash(f'Successfully made available driver: {result.success.name}', 'success')
+        flash(f'Successfully made available driver: {result.success.first_name} {result.success.last_name}', 'success')
     return redirect(url_for('driver.index'))
 
 
@@ -78,7 +91,7 @@ def deactivate(id):
     if not result.is_success:
         flash(f'Error: {result.error.message}', 'error')
     else:
-        flash(f'Successfully deactivated driver: {result.success.name}', 'success')
+        flash(f'Successfully deactivated driver: {result.success.first_name} {result.success.last_name}', 'success')
     return redirect(url_for('driver.index'))
 
 
@@ -90,7 +103,7 @@ def activate(id):
     if not result.is_success:
         flash(f'Error: {result.error.message.message}', 'error')
     else:
-        flash(f'Successfully activated driver: {result.success.name}', 'success')
+        flash(f'Successfully activated driver: {result.success.first_name} {result.success.last_name}', 'success')
     return redirect(url_for('driver.index'))
 
 

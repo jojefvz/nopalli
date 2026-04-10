@@ -55,18 +55,16 @@
       [[ flash.message ]]
     </div>
   </div>
-  <main>
-    {% block content %}{% endblock %}
-  </main>
+
+  {% block content %}{% endblock %}
+  
   <footer>
     <div class="base-footer">
       <h2>Nopalli ©</h2>
     </div>
   </footer>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  {% include '_vue_cdn.html' %}
   <script>
-    const { createApp } = Vue;
-
     createApp({
       delimiters: ['[[', ']]'],
       data() {

@@ -12,7 +12,9 @@ from src.application.use_cases.broker_use_cases import (
 from src.application.use_cases.dispatch_use_cases import (
     CreateDispatchUseCase,
     ListDispatchesUseCase,
-#     EditDispatchUseCase
+    GetDispatchUseCase,
+    EditDispatchUseCase,
+    StartDispatchUseCase
 )
 from src.application.use_cases.driver_use_cases import (
     ListDriversUseCase,
@@ -137,7 +139,19 @@ class Application:
             self.driver_repository,
             self.location_repository,
             )
-        # self.edit_dispatch_use_case = EditDispatchUseCase(self.dispatch_repository)
+        self.get_dispatch_use_case = GetDispatchUseCase(
+            self.dispatch_repository
+        )
+        self.edit_dispatch_use_case = EditDispatchUseCase(
+            self.dispatch_repository,
+            self.broker_repository,
+            self.driver_repository,
+            self.location_repository,
+            self.task_repository,
+        )
+        self.start_dispatch_use_case = StartDispatchUseCase(
+            self.dispatch_repository
+        )
 
         # configure location use cases
         self.list_locations_use_case = ListLocationsUseCase(self.location_repository)
@@ -165,7 +179,9 @@ class Application:
         self.dispatch_controller = DispatchController(
             self.create_dispatch_use_case,
             self.list_dispatches_use_case,
-            # self.edit_dispatch_use_case,
+            self.get_dispatch_use_case,
+            self.edit_dispatch_use_case,
+            self.start_dispatch_use_case,
             self.dispatch_presenter
             )
         

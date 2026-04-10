@@ -7,8 +7,10 @@ class DriverViewModel:
     """View-specific representation of a project."""
 
     id: str
-    name: str
     status: str
+    first_name: str
+    last_name: str
+    nickname: Optional[str]
 
 
 @dataclass(frozen=True)

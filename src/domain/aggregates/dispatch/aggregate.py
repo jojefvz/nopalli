@@ -1,98 +1,57 @@
-from itertools import count
 from typing import Optional
 
 from src.domain.aggregates.broker.aggregate import Broker
 from src.domain.aggregates.driver.aggregate import Driver
 
 from src.domain.common.entity import AggregateRoot
-from .entities import Instruction, Task
-from .utilities import _ALLOWED_FOLLOWS, _ENDABLE, _STARTABLE
-from .value_objects import Appointment, Container, DispatchStatus, TaskStatus
+from src.domain.exceptions import BusinessRuleViolation
+from .entities import Task
+
+from .value_objects import Appointment, DispatchStatus, TaskStatus
 
 
 MINIMUM_TASKS_REQUIRED = 2
 MAXIMUM_TASKS_PERMITTED = 10
-MAXIMUM_CONTAINERS_PER_DISPATCH = 4
 
 class Dispatch(AggregateRoot):
     def __init__(
             self, 
             broker: Broker,
+            current_driver: Optional[Driver],
             plan: list[Task],
-            driver: Optional[Driver] = None
             ):
         super().__init__()
         self.reference = None
         self._status = DispatchStatus.DRAFT
         self.broker = broker
+        self.current_driver = current_driver
         self.plan = plan
-        self.driver = driver
-        
+
     @property
     def status(self):
         return self._status
+
+    @property
+    def assigned_drivers(self):
+        drivers = [task.completed_by for task in self.plan if task.completed_by]
+        if self.current_driver:
+            drivers.append(self.current_driver) 
+        return list(dict.fromkeys(drivers))
     
     @property
     def containers(self):
-        container_numbers = [task.container.number for task in self.plan if task.container.number]
-        return list(dict.fromkeys(container_numbers))
+        containers = [task.container for task in self.plan if task.container]
+        return list(dict.fromkeys(containers))
+    
+    @property
+    def appointments(self):
+        return [(task.date, task.appointment) for task in self.plan if task.appointment]
 
     def start(self) -> None:
         self._verify_dispatch_before_starting()
-        self._status = DispatchStatus.IN_PROGRESS
-
-    def _verify_dispatch_before_starting(self) -> None:
-        if not self.driver:
-            raise ValueError('A driver has not been assigned to dispatch.')
-        if not self._appointment_exists():
-            raise ValueError('An appointment has not been set on at least one task.')
-        if not self._containers_assigned():
-            raise ValueError('A multi-container dispatch requires containers to be assigned to tasks.')
-        if not self._valid_plan():
-            raise ValueError('Plan instructions are not valid.')
         if self._status != DispatchStatus.DRAFT:
-            raise ValueError('Only a draft dispatch can be started.')
-
-    def _appointment_exists(self) -> bool:
-        for task in self.plan:
-            if task.appointment:
-                return True
-        return False
-    
-    def _containers_assigned(self) -> bool:
-        for task in self.plan:
-            if task.instruction in (
-                Instruction.FETCH_CHASSIS,
-                Instruction.BOBTAIL_TO,
-                Instruction.TERMINATE_CHASSIS,
-            ):
-                continue
-            elif not task.container:
-                return False
-        return True
-    
-    def _valid_plan(self) -> bool:
-        # Check first task
-        if self.plan[0].instruction not in _STARTABLE:
-            return False
-        
-        # Walk through tasks
-        for idx in range(0, len(self.plan) - 1):
-            current = self.plan[idx].instruction
-            next = self.plan[idx + 1].instruction
-
-            allowed = _ALLOWED_FOLLOWS[current]
-
-            if not allowed and next:
-                return False
-            if allowed and next not in allowed:
-                return False
-    
-        # Check last task
-        if self.plan[-1].instruction not in _ENDABLE:
-            return False
-
-        return True
+            raise BusinessRuleViolation('Only a draft dispatch can be started.')
+        self._status = DispatchStatus.IN_PROGRESS
 
     def pause(self) -> None:
         if self._status != DispatchStatus.IN_PROGRESS:

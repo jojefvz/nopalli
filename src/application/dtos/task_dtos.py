@@ -17,10 +17,10 @@ class TaskResponse:
     id: str
     priority: int
     status: TaskStatus
+    location: Location
     instruction: Instruction
-    date: datetime.date
-    location: Optional[Location]
     container: Optional[Container]
+    date: datetime.date
     appointment: Optional[Appointment]
 
     @classmethod
@@ -29,9 +29,9 @@ class TaskResponse:
             id=str(task.id),
             status=task.status,
             priority=task.priority,
-            instruction=task.instruction,
-            date=task.date,
             location=task.location,
+            instruction=task.instruction,
             container=task.container,
+            date=task.date,
             appointment=task.appointment
         )

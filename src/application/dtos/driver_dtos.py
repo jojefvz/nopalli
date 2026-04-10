@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Self
+from typing import Optional, Self
 from uuid import UUID
 
 from src.domain.aggregates.driver.aggregate import Driver
@@ -11,19 +11,29 @@ from src.domain.exceptions import ValidationError
 class CreateDriverRequest:
     """Request data for creating a new driver."""
 
-    name: str
+    first_name: str
+    last_name: str
+    nickname: str
 
     def __post_init__(self) -> None:
         """Validate request data"""
-        if not self.name.strip():
-            raise ValidationError("Driver name is required")
-        if len(self.name) > 100:
-            raise ValidationError("Driver name cannot exceed 100 characters")
+        if not self.first_name.strip():
+            raise ValidationError("Driver first name is required")
+        if len(self.first_name) > 100:
+            raise ValidationError("Driver first name cannot exceed 100 characters")
+        if not self.last_name.strip():
+            raise ValidationError("Driver last name is required")
+        if len(self.last_name) > 100:
+            raise ValidationError("Driver last name cannot exceed 100 characters")
+        if self.nickname and len(self.nickname) > 100:
+            raise ValidationError("Driver nickname cannot exceed 100 characters")
 
     def to_execution_params(self) -> dict:
         """Convert request data to use case parameters."""
         return {
-            "name": self.name.strip()
+            "first_name": self.first_name.strip(),
+            "last_name": self.last_name.strip(),
+            "nickname": self.nickname.strip() if self.nickname else None
         }
 
 
@@ -102,22 +112,32 @@ class ActivateDriverRequest:
 class EditDriverRequest:
     """Request data for creating a new driver."""
     id: str
-    name: str
+    first_name: str
+    last_name: str
+    nickname: str
 
     def __post_init__(self) -> None:
         """Validate request data"""
         if not UUID(self.id, version=4):
             raise ValidationError('Driver id is not of uuid4 format.')
-        if not self.name.strip():
-            raise ValidationError("Driver name is required")
-        if len(self.name) > 100:
-            raise ValidationError("Driver name cannot exceed 100 characters")
+        if not self.first_name.strip():
+            raise ValidationError("Driver first name is required.")
+        if len(self.first_name) > 100:
+            raise ValidationError("Driver first name cannot exceed 100 characters.")
+        if not self.last_name.strip():
+            raise ValidationError("Driver last name is required.")
+        if len(self.last_name) > 100:
+            raise ValidationError("Driver last name cannot exceed 100 characters.")
+        if self.nickname and len(self.last_name) > 100:
+            raise ValidationError("Driver nickname cannot exceed 100 characters.")
 
     def to_execution_params(self) -> dict:
         """Convert request data to use case parameters."""
         return {
             "id": UUID(self.id),
-            "name": self.name.strip(),
+            "first_name": self.first_name.strip(),
+            "last_name": self.last_name.strip(),
+            "nickname": self.nickname.strip() if self.nickname else None,
         }
     
 
@@ -126,14 +146,18 @@ class DriverResponse:
     """Response data for basic driver operations."""
 
     id: str
-    name: str
     status: DriverStatus
-
+    first_name: str
+    last_name: str
+    nickname: Optional[str]
+    
     @classmethod
     def from_entity(cls, driver: Driver) -> Self:
         """Create response from a Driver entity."""
         return cls(
             id=str(driver.id),
-            name=driver.name,
             status=driver.status.value,
+            first_name=driver.first_name,
+            last_name=driver.last_name,
+            nickname=driver.nickname
         )

@@ -74,7 +74,9 @@ class DriverController:
 
     def handle_create(
             self,
-            name: str
+            first_name: str,
+            last_name: str,
+            nickname: str
         ) -> OperationResult[DriverViewModel]:
         """
         Handle driver creation requests from any interface.
@@ -99,7 +101,11 @@ class DriverController:
             # Interface->Application boundary crossing
             # It contains validation specific to application needs
             # Ensures data entering the application layer is properly formatted and validated
-            request = CreateDriverRequest(name=name)
+            request = CreateDriverRequest(
+                first_name=first_name,
+                last_name=last_name,
+                nickname=nickname,
+            )
 
             # Execute use case and get domain-oriented result
             result = self.create_use_case.execute(request)
@@ -133,7 +139,9 @@ class DriverController:
     def handle_edit(
             self,
             id: str,
-            name: str
+            first_name: str,
+            last_name: str,
+            nickname: str,
         ) -> OperationResult[DriverViewModel]:
         try:
             # Convert primitive input to use case request model specifically designed for the
@@ -142,7 +150,9 @@ class DriverController:
             # Ensures data entering the application layer is properly formatted and validated
             request = EditDriverRequest(
                 id=id,
-                name=name
+                first_name=first_name,
+                last_name=last_name,
+                nickname=nickname,
             )
 
             # Execute use case and get domain-oriented result

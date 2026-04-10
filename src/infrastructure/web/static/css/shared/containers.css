@@ -1,6 +1,6 @@
 .container {
     background-color: #f4f4f4;
-    padding-bottom: 1em;
+    padding: 1em;
 }
 
 .container-header {
@@ -13,14 +13,12 @@
   margin-left: .7em;
 }
 
-.container-header button {
+.container-header button,
+.container-header a {
   margin-right: 1.3em;
 }
 
 .object-container {
-    display: flex;
-    align-items: start;
-    justify-content: space-between;
     background-color: white;
     border-radius: .2em;
     box-shadow: .05em .05em 0.5em rgba(99, 99, 99, 0.2);
@@ -29,18 +27,18 @@
     padding-bottom: 1em;
 }
 
-.object-container button {
-  margin-right: 1.5em;
+
+.object-header {
+  padding-left: 1em;
+  padding-top: 1em;
 }
 
-.object-details {
-    margin-left: 1em;
+.object-body {
+  display: flex;
+  padding-left: 1em;
+  column-gap: 10em;
 }
 
-.object-details h3 {
-    margin-bottom: .5em;
-}
-
-.object-details div {
-    margin-top: 0;
+.object-body > * {
+  margin: 0;
 }

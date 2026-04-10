@@ -110,7 +110,6 @@ class SQLAlchemyLocationRepository(LocationRepository):
             stmt = select(Location).where(Location._status == LocationStatus.ACTIVE)
 
             locations = session.scalars(stmt).all()
-            print("ACITVE LOCATIONS", locations)
 
             session.expunge_all()
 

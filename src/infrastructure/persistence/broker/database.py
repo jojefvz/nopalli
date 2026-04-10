@@ -65,7 +65,6 @@ class SQLAlchemyBrokerRepository(BrokerRepository):
             stmt = select(Broker).where(Broker._status == BrokerStatus.ACTIVE)
 
             brokers = session.scalars(stmt).all()
-            print("ACITVE BROKERS", brokers)
 
             session.expunge_all()
 

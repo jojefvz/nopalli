@@ -26,10 +26,14 @@ class CreateDriverUseCase:
         try:
             params = request.to_execution_params()
 
-            if self.driver_repository.get_by_name(params['name']):
-                raise BusinessRuleViolation('A driver with that name already exists.')
+            if params['nickname'] and self.driver_repository.get_by_nickname(params['nickname']):
+                raise BusinessRuleViolation('A driver with that nickname already exists.')
             
-            driver = Driver(name=params['name'])
+            driver = Driver(
+                first_name=params['first_name'],
+                last_name=params['last_name'],
+                nickname=params['nickname'],
+            )
 
             self.driver_repository.save(driver)
 
@@ -172,37 +176,16 @@ class EditDriverUseCase:
         try:
             params = request.to_execution_params()
 
-            if self.driver_repository.get_by_name(params['name'], params['id']):
-                raise BusinessRuleViolation('A driver with that name already exists.')
+            if params['nickname'] and self.driver_repository.get_by_nickname(params['nickname']):
+                raise BusinessRuleViolation('A driver with that nickname already exists.')
             
             id = params["id"]
 
             driver = self.driver_repository.get(id)
 
-            driver.name = params["name"]
-
-            self.driver_repository.save(driver)
-
-            return Result.success(DriverResponse.from_entity(driver))
-
-        except ValidationError as e:
-            return Result.failure(Error.validation_error(str(e)))
-        except BusinessRuleViolation as e:
-            return Result.failure(Error.business_rule_violation(str(e)))
-
-
-@dataclass
-class GetDriverUseCase:
-    """Use case for creating a new driver."""
-
-    driver_repository: DriverRepository
-
-    def execute(self, request) -> Result:
-        """Execute the use case."""
-        try:
-            params = request.to_execution_params()
-
-            driver = Driver(name=params['name'])
+            driver.first_name = params["first_name"]
+            driver.last_name = params["last_name"]
+            driver.nickname = params["nickname"]
 
             self.driver_repository.save(driver)
 
@@ -224,7 +207,7 @@ class AvailableAndOperatingDriversUseCase:
         """Execute the use case."""
         try:
             drivers = self.driver_repository.get_available_and_operating()
-            print("AVAILABLE ANDFAS", drivers)
+            print("AVAILABLE DRIVERS", drivers)
             return Result.success([DriverResponse.from_entity(d) for d in drivers])
 
         except ValidationError as e:

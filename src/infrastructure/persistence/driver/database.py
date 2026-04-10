@@ -36,17 +36,10 @@ class SQLAlchemyDriverRepository(DriverRepository):
         finally:
             session.close()
 
-    def get_by_name(self, driver_name: str, driver_id: Optional[UUID] = None) -> Driver:
+    def get_by_nickname(self, nickname: str) -> Driver:
         session = self.session_factory()
         try:
-            if driver_id:
-                stmt = select(Driver).where(and_(
-                    Driver.id != driver_id,
-                    Driver.name == driver_name
-                    )
-                )
-            else:
-                stmt = select(Driver).where(Driver.name == driver_name)
+            stmt = select(Driver).where(Driver.nickname == nickname)
 
             if driver := session.scalars(stmt).first():
                 session.expunge(driver)

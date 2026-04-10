@@ -1,13 +1,22 @@
+from typing import Optional
+
 from src.domain.aggregates.driver.value_objects import DriverStatus
 from src.domain.common.entity import AggregateRoot
 from src.domain.exceptions import BusinessRuleViolation
 
 
 class Driver(AggregateRoot):
-    def __init__(self, name):
+    def __init__(
+            self, 
+            first_name: str, 
+            last_name: str, 
+            nickname: Optional[str]
+        ):
         super().__init__()
         self._status = DriverStatus.AVAILABLE
-        self.name = name
+        self.first_name = first_name
+        self.last_name = last_name
+        self.nickname = nickname
 
     @property
     def status(self) -> DriverStatus:

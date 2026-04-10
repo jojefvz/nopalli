@@ -1,38 +1,41 @@
 from dataclasses import dataclass
+from datetime import date
 from typing import Optional
 
+from src.domain.aggregates.dispatch.value_objects import Appointment, Container
 from src.interfaces.view_models.task_vm import TaskViewModel
 
 
 @dataclass(frozen=True)
 class DispatchViewModel:
-    """View-specific representation of a project."""
+    """View-specific representation of a dispatch."""
 
     id: str
     reference: str
     status: str
     broker_name: str
-    driver_name: Optional[str]
-    container_numbers: list[str]
+    current_driver: str
+    assigned_drivers: list[str]
+    containers: list[dict]
+    appointments: list[tuple[date, dict]]
     plan: list[TaskViewModel]
 
 @dataclass(frozen=True)
-class DispatchListItemViewModel:
-    """View model for projects in hierarchical list."""
+class EditDispatchViewModel:
+    """View-specific representation of a dispatch that will be edited."""
 
     id: str
-    name: str
-    is_inbox: bool
-    tasks: list["TaskListItemViewModel"]
-
+    reference: str
+    broker_name: str
+    broker_id: str
+    current_driver_name: str
+    current_driver_id: str
+    containers: list[dict]
+    plan: list[TaskViewModel]
 
 @dataclass(frozen=True)
-class TaskListItemViewModel:
-    """View model for tasks in hierarchical list."""
+class DispatchSuccessViewModel:
+    """View model for projects in hierarchical list."""
 
-    id: str
-    letter_id: str  # 'a', 'b', etc.
-    title: str
-    status_display: str
-    priority_display: str
-    due_date_display: Optional[str]
+    reference: str
+

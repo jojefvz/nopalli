@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container" data-page="drivers">
+<main class="container" data-page="drivers">
   <div class="container-header">
     <h2>Drivers</h2>
     <button 
@@ -29,14 +29,33 @@
       <div class="modal-body">
         <form action="{{ url_for('driver.create_driver') }}" method="post">
           <div class="form-field">
-            <label for="name">Driver Name</label>
+            <label>First Name</label>
             <input 
             type="text" 
-            id="name" 
-            name="name" 
+            name="first_name" 
             minlength="2"
             maxlength="100"
+            pattern="[A-Za-z]+"
             required>
+          </div>
+          <div class="form-field">
+            <label>Last Name</label>
+            <input 
+            type="text" 
+            name="last_name" 
+            minlength="2"
+            maxlength="100"
+            pattern="[A-Za-z]+"
+            required>
+          </div>
+          <div class="form-field">
+            <label> Nickname</label>
+            <input 
+            type="text" 
+            name="nickname" 
+            minlength="2"
+            maxlength="100"
+            pattern="[A-Za-z0-9]+">
           </div>
           <div class="form-field">
             <button type="submit">Submit</button>
@@ -50,23 +69,25 @@
   <!-- Driver List -->
   <div class="container-content">
     <div v-for="driver in drivers" :key="driver.id" class="object-container">
-      <div class="object-details">
-        <h3>[[ driver.name ]] ([[ driver.status ]])</h3>
+      <div class="object-header">
+        <h3>[[ driver.first_name ]] [[ driver.last_name ]] ([[ driver.status ]])</h3>
+        <h4>Nickname: [[ driver.nickname ]]</h4>
         <button @click="openEditModal(driver)">Edit</button>
       </div>
-      
-      <div 
-      v-if="['Available','Unavailable'].includes(driver.status)" 
-      type="button" 
-      class="status-btns-container">
-        <button @click="openAvailableModal(driver)">
-          [[ driver.status === 'Available' ? 'Sit Out' : 'Make Available']]
+      <div class="object-body">
+        <div 
+        v-if="['Available','Unavailable'].includes(driver.status)" 
+        type="button" 
+        class="status-btns-container">
+          <button @click="openAvailableModal(driver)">
+            [[ driver.status === 'Available' ? 'Sit Out' : 'Make Available']]
+          </button>
+          <button @click="openActivateModal(driver)">Deactivate</button>
+        </div>
+        <button v-else-if="driver.status === 'Deactivated'" type="button" @click="openActivateModal(driver)">
+          Activate
         </button>
-        <button @click="openActivateModal(driver)">Deactivate</button>
       </div>
-      <button v-else-if="driver.status === 'Deactivated'" type="button" @click="openActivateModal(driver)">
-        Activate
-      </button>
     </div>
   </div>
   
@@ -80,12 +101,30 @@
       <div class="modal-body">
         <form :action="`drivers/${selectedDriver.id}/edit`" method="post">
           <div class="form-field">
-            <label for="name">Driver Name</label>
+            <label>First Name</label>
             <input 
               type="text" 
-              name="name" 
-              :value="selectedDriver.name" 
+              name="first_name" 
+              :value="selectedDriver.first_name"
+              pattern="[A-Za-z]+"
               required>
+          </div>
+          <div class="form-field">
+            <label>Last Name</label>
+            <input 
+              type="text"
+              name="last_name" 
+              :value="selectedDriver.last_name"
+              pattern="[A-Za-z]+"
+              required>
+          </div>
+          <div class="form-field">
+            <label>Nickname</label>
+            <input 
+              type="text" 
+              name="nickname" 
+              pattern="[A-Za-z0-9]+"
+              :value="selectedDriver.nickname">
           </div>
           <div class="form-field">
             <button type="submit" class="modal-submit">Submit</button>
@@ -99,7 +138,8 @@
   <div v-if="selectedDriver && activateModalOpen" class="modal-backdrop">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>[[ ['Available', 'Unavailable'].includes(selectedDriver.status) ? 'Deactivating' : 'Activating' ]]: [[ selectedDriver.name ]]</h2>
+        <h2>[[ ['Available', 'Unavailable'].includes(selectedDriver.status) ? 'Deactivating' : 'Activating' ]]: 
+          [[ selectedDriver.first_name ]] [[ selectedDriver.last_name ]]</h2>
         <button class="close-btn" @click="closeActivateModal">×</button>
       </div>
       <div class="modal-body">
@@ -128,7 +168,8 @@
   <div v-if="selectedDriver && availableModalOpen" class="modal-backdrop">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>[[ selectedDriver.status === 'Available' ? 'Sitting Out' : 'Making Avaiable' ]]: [[ selectedDriver.name ]]</h2>
+        <h2>[[ selectedDriver.status === 'Available' ? 'Sitting Out' : 'Making Avaiable' ]]:
+           [[ selectedDriver.first_name ]] [[ selectedDriver.last_name ]]</h2>
         <button class="close-btn" @click="closeAvailableModal">×</button>
       </div>
       <div class="modal-body">
@@ -152,7 +193,7 @@
       </div>
     </div>
   </div>
-</div>
+</main>
 {% endblock %}
 
 {% block scripts %}
@@ -170,8 +211,10 @@
           {% for driver in drivers %}
             {
               id: "{{ driver.id }}",
-              name: "{{ driver.name }}",
               status: "{{ driver.status }}",
+              first_name: "{{ driver.first_name }}",
+              last_name: "{{ driver.last_name }}",
+              nickname: "{{ driver.nickname if driver.nickname else '' }}",
             }{{ "," if not loop.last }}
           {% endfor %}
         ]

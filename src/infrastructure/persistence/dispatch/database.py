@@ -2,9 +2,10 @@ from typing import final
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import joinedload, sessionmaker
 
 from src.domain.aggregates.dispatch.aggregate import Dispatch
+from src.domain.aggregates.dispatch.entities import Task
 from src.domain.exceptions import DispatchNotFoundError
 from src.application.repositories.dispatch_repository import DispatchRepository
 
@@ -29,9 +30,15 @@ class SQLAlchemyDispatchRepository(DispatchRepository):
         session = self.session_factory()
 
         try:
-            if dispatch := session.get(Dispatch, dispatch_id):
-                return dispatch
-            raise DispatchNotFoundError(dispatch_id)
+            dispatch = session.get(Dispatch, dispatch_id, options=[
+                joinedload(Dispatch.broker),
+                joinedload(Dispatch.current_driver),
+                joinedload(Dispatch.plan).joinedload(Task.location),
+            ])
+            if dispatch is None:
+                raise DispatchNotFoundError(dispatch_id)
+            session.expunge_all()
+            return dispatch
         finally:
             session.close()
 
@@ -58,10 +65,10 @@ class SQLAlchemyDispatchRepository(DispatchRepository):
         session = self.session_factory()
 
         try:
-            session.add(dispatch)
+            merged = session.merge(dispatch)
             session.commit()
-            session.refresh(dispatch)
-            session.expunge(dispatch)
+            session.refresh(merged)
+            session.expunge_all()
         finally:
             session.close()
 
@@ -80,3 +87,4 @@ class SQLAlchemyDispatchRepository(DispatchRepository):
             session.commit()
         finally:
             session.close()
+
