@@ -147,11 +147,13 @@ def set_orm_mapping(engine):
                     task_table.c.appointment_start_time,
                     task_table.c.appointment_end_time,
                     ),
-                'completed_by': relationship(
+                '_completed_by': relationship(
                     Driver,
                     lazy='joined',
                     foreign_keys=[task_table.c.driver_id]
-                    )
+                    ),
+                '_check_in_datetime': task_table.c.check_in,
+                '_check_out_datetime': task_table.c.check_out,
             })
         
         mapper_registry.map_imperatively(

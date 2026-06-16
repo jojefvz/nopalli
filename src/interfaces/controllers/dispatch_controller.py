@@ -21,21 +21,33 @@ from src.application.dtos.dispatch_dtos import (
     CreateDispatchRequest,
     GetDispatchRequest,
     EditDispatchRequest,
-    StartDispatchRequest
+    StartDispatchRequest,
+    GetLoadboardDispatchesRequest,
+    StartTaskRequest,
+    RevertTaskRequest,
+    CompleteTaskRequest,
     )
 from src.application.use_cases.dispatch_use_cases import (
     CreateDispatchUseCase,
     ListDispatchesUseCase,
     GetDispatchUseCase,
     EditDispatchUseCase,
-    StartDispatchUseCase
+    StartDispatchUseCase,
+    GetLoadboardDispatchesUseCase,
+    StartTaskUseCase,
+    RevertTaskUseCase,
+    CompleteTaskUseCase,
 )
 from src.domain.exceptions import ValidationError
 from src.interfaces.presenters.dispatch_presenter import DispatchPresenter
 from src.interfaces.view_models.dispatch_vm import (
     DispatchViewModel,
     EditDispatchViewModel,
-    DispatchSuccessViewModel
+    DispatchSuccessViewModel,
+    StartDispatchSuccessViewModel,
+    StartTaskSuccessViewModel,
+    RevertTaskSuccessViewModel,
+    CompleteTaskSuccessViewModel,
 )
 from src.interfaces.view_models.base import OperationResult
 
@@ -66,7 +78,12 @@ class DispatchController:
     get_dispatch_use_case: GetDispatchUseCase
     edit_use_case: EditDispatchUseCase
     start_dispatch_use_case: StartDispatchUseCase
+    get_loadboard_use_case: GetLoadboardDispatchesUseCase
+    start_task_use_case: StartTaskUseCase
+    revert_task_use_case: RevertTaskUseCase
+    complete_task_use_case: CompleteTaskUseCase
     presenter: DispatchPresenter
+    
 
     # def handle_list(self) -> OperationResult[list[DispatchViewModel]]:
     #     result = self.list_use_case.execute()
@@ -243,16 +260,16 @@ class DispatchController:
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
         
-    def handle_start_dispatch(self, dispatch_id: str):
+    def handle_start_dispatch(self, dispatch_id: str) -> OperationResult[StartDispatchSuccessViewModel]:
         try:
             request = StartDispatchRequest(dispatch_id=dispatch_id)
 
             # Execute use case and get domain-oriented result
-            result = self.edit_use_case.execute(request)
+            result = self.start_dispatch_use_case.execute(request)
 
             if result.is_success:
                 # Convert domain response to view model
-                view_model = self.presenter.present_dispatch_success(result.value)
+                view_model = self.presenter.present_start_dispatch_success(result.value)
                 return OperationResult.succeed(view_model)
 
             # Handle domain errors
@@ -266,3 +283,98 @@ class DispatchController:
             error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
             return OperationResult.fail(error_vm.message, error_vm.code)
         
+    def handle_loadboard_list(self, date: str) -> OperationResult[list[DispatchViewModel]]:
+        try:
+            # Convert primitive input to use case request model specifically designed for the
+            # Interface->Application boundary crossing
+            # It contains validation specific to application needs
+            # Ensures data entering the application layer is properly formatted and validated
+
+            # Execute use case and get domain-oriented result
+            request = GetLoadboardDispatchesRequest(date=date)
+            result = self.get_loadboard_use_case.execute(request)
+
+            if result.is_success:
+                # Convert domain response to view model
+                view_models = [self.presenter.present_dispatch(disp) for disp in result.value]
+                return OperationResult.succeed(view_models)
+
+            # Handle domain errors
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+    def handle_start_task(self, dispatch_id: str, task_priority: str) -> OperationResult[StartTaskSuccessViewModel]:
+        try:
+            request = StartTaskRequest(dispatch_id, task_priority)
+
+            # Execute use case and get domain-oriented result
+            result = self.start_task_use_case.execute(request)
+
+            if result.is_success:
+                # Convert domain response to view model
+                view_model = self.presenter.present_start_task_success(result.value)
+                return OperationResult.succeed(view_model)
+
+            # Handle domain errors
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+    def handle_revert_task(self, dispatch_id: str, task_priority: str) -> OperationResult[RevertTaskSuccessViewModel]:
+        try:
+            request = RevertTaskRequest(dispatch_id, task_priority)
+
+            # Execute use case and get domain-oriented result
+            result = self.revert_task_use_case.execute(request)
+
+            if result.is_success:
+                # Convert domain response to view model
+                view_model = self.presenter.present_revert_task_success(result.value)
+                return OperationResult.succeed(view_model)
+
+            # Handle domain errors
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)
+        
+    def handle_complete_task(self, dispatch_id: str, task_priority: str) -> OperationResult[CompleteTaskSuccessViewModel]:
+        try:
+            request = CompleteTaskRequest(dispatch_id, task_priority)
+
+            # Execute use case and get domain-oriented result
+            result = self.complete_task_use_case.execute(request)
+
+            if result.is_success:
+                # Convert domain response to view model
+                view_model = self.presenter.present_complete_task_success(result.value)
+                return OperationResult.succeed(view_model)
+
+            # Handle domain errors
+            error_vm = self.presenter.present_error(
+                result.error.message, str(result.error.code.name)
+            )
+            return OperationResult.fail(error_vm.message, error_vm.code)
+
+        except ValidationError as e:
+            # Handle validation errors
+            error_vm = self.presenter.present_error(str(e), "VALIDATION_ERROR")
+            return OperationResult.fail(error_vm.message, error_vm.code)

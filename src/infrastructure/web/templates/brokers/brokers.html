@@ -2,15 +2,14 @@
 
 {% block main_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/containers.css') }}">
 {% endblock %}
 
 {% block content %}
 <main class="container" data-page="brokers">
-  <div class="container-header">
-    <h2>Brokers</h2>
-    <button 
+  <div class="slab-container">
+    <span class="line-box">Brokers</span>
+    <button
+    style="margin: 0;"
     type="button" 
     class="btn"
     @click="newBrokerModal = true">New Broker</button>
@@ -137,18 +136,23 @@
   
   <!-- Broker List -->
   <div class="container-content">
-    <div v-for="broker in brokers" :key="broker.id" class="object-container">
-      <div class="object-details">
-        <h3>[[ broker.name ]] ([[ broker.status ]])</h3>
-        <div class="broker-address">
+    <div v-for="broker in brokers" :key="broker.id" class="slab-container">
+      <div class="slab-left">
+        <span class="slab-title">[[ broker.name ]]</span>
+          <span class="status-badge" :class="`status-badge-${broker.status.toLowerCase()}`">
+            [[ broker.status ]]
+          </span>
+        <div class="slab-address">
           [[ broker.street_address ]]<br>
           [[ broker.city ]], [[ broker.state ]] [[ broker.zipcode ]]
         </div>
-        <button @click="openEditModal(broker)">Edit</button>
+        <button class="btn-card" @click="openEditModal(broker)">Edit</button>
       </div>
-      <button type="button" @click="openActivateModal(broker)">
-        [[ broker.status === 'Active' ? 'Deactivate' : 'Activate' ]]
-      </button>
+      <div class="slab-right">
+        <button class="btn-card" type="button" @click="openActivateModal(broker)">
+          [[ broker.status === 'Active' ? 'Deactivate' : 'Activate' ]]
+        </button>
+      </div>
     </div>
   </div>
   
@@ -279,11 +283,11 @@
             Broker will be available for broker selection.
           </p>
           <input type="hidden" name="id" :value="selectedBroker.id">
-          <p>
-            <button type="submit">
+          <div class="form-field">
+            <button class="btn-card" type="submit">
               [[ selectedBroker.status === 'Active' ? 'Deactivate' : 'Activate' ]]
             </button>
-          </p>
+          </div>
         </form>
       </div>
     </div>

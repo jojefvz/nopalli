@@ -41,11 +41,10 @@ class WebTaskPresenter(TaskPresenter):
 
     def present_task(self, task_response: TaskResponse) -> TaskViewModel:
         """Format task for web display."""
-        print("APPOINTMENT OBJECT:", task_response.appointment)
         return TaskViewModel(
             id=task_response.id,
             priority=str(task_response.priority),
-            status=task_response.status.value.capitalize(),
+            status=task_response.status.value,
             location_name=task_response.location.name,
             instruction=task_response.instruction.value,
             container_number=task_response.container.number if task_response.container else None,
@@ -57,7 +56,6 @@ class WebTaskPresenter(TaskPresenter):
 
     def present_edit_task(self, task_response: TaskResponse) -> EditTaskViewModel:
         """Format task for web display."""
-        print("APPOINTMENT OBJECT:", task_response.appointment)
         return EditTaskViewModel(
             location_name=task_response.location.name,
             location_id=str(task_response.location.id),

@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block main_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dispatches/loadboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dispatches/dispatches.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="container" data-page="loadboard">
+  <div class="slab-container">
+    <h2>Loadboard</h2>
+  </div>
+  <!-- Current Task Modal -->
+  <div v-if="selectedDispatch && currentTaskModalOpen" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Current Task</h2>
+        <h2>Dispatch: [[ selectedDispatch.reference ]]</h2>
+        <button class="close-btn" @click="closeCurrentTaskModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div v-if="getCurrentTask(selectedDispatch)">
+          <div class="current-task-actions">
+            <form v-if="getCurrentTask(selectedDispatch).status === 'not_started'" method="post" :action="`/dispatches/${selectedDispatch.id}/tasks/${getCurrentTask(selectedDispatch).priority}/start`">
+              <input type="hidden" name="board_date" value="{{ board_date }}">
+              <button type="submit" class="btn-card" style="font-size: 1em;">Start</button>
+            </form>
+            <form v-if="getCurrentTask(selectedDispatch).status === 'in_progress'" method="post" :action="`/dispatches/${selectedDispatch.id}/tasks/${getCurrentTask(selectedDispatch).priority}/complete`">
+              <input type="hidden" name="board_date" value="{{ board_date }}">
+              <button type="submit" class="btn-card" style="font-size: 1em;">Complete</button>
+            </form>
+            <form v-if="['in_progress', 'completed', 'stopoff'].includes(getCurrentTask(selectedDispatch).status)" method="post" :action="`/dispatches/${selectedDispatch.id}/tasks/${getCurrentTask(selectedDispatch).priority}/revert`">
+              <input type="hidden" name="board_date" value="{{ board_date }}">
+              <button type="submit" class="btn-card" style="font-size: 1em;">Revert Status</button>
+            </form>
+            <form v-if="getCurrentTask(selectedDispatch).status === 'in_progress'" method="post" :action="`/dispatches/${selectedDispatch.id}/tasks/${getCurrentTask(selectedDispatch).priority}/stopoff`">
+              <input type="hidden" name="board_date" value="{{ board_date }}">
+              <button type="submit" class="btn-card" style="font-size: 1em;">Stop Off</button>
+            </form>
+            <form v-if="getCurrentTask(selectedDispatch).status === 'not_started'" method="post" :action="`/dispatches/${selectedDispatch.id}/tasks/${getCurrentTask(selectedDispatch).priority}/void`">
+              <input type="hidden" name="board_date" value="{{ board_date }}">
+              <button type="submit" class="btn-card card-actions-danger" style="font-size: 1em;">Void</button>
+            </form>
+          </div>
+          <div class="slab-container" data-marker="task">
+            <div class="slab-header">
+              <h4>Task [[ getCurrentTask(selectedDispatch).priority ]]</h4>
+              <span class="status-badge" :class="`status-badge-${getCurrentTask(selectedDispatch).status.toLowerCase().replace(/_/g, '-')}`">
+                [[ getCurrentTask(selectedDispatch).status.replace(/_/g, ' ') ]]
+              </span>
+            </div>
+            <div class="form-field">
+              <label>Location</label>
+              <span>[[ getCurrentTask(selectedDispatch).location_name || 'N/A' ]]</span>
+            </div>
+            <div class="form-field">
+              <label>Instruction</label>
+              <span>[[ formatInstruction(getCurrentTask(selectedDispatch).instruction) ]]</span>
+            </div>
+            <div class="form-field">
+              <label>Container</label>
+              <span>[[ getCurrentTask(selectedDispatch).container_number || 'None' ]]</span>
+            </div>
+            <div class="form-field">
+              <label>Date</label>
+              <span>[[ getCurrentTask(selectedDispatch).date || 'N/A' ]]</span>
+            </div>
+            <div class="form-field">
+              <label>Appointment Type</label>
+              <span>[[ getCurrentTask(selectedDispatch).appointment_type ? formatInstruction(getCurrentTask(selectedDispatch).appointment_type) : 'None' ]]</span>
+            </div>
+            <div class="form-field" style="flex-direction: row; gap: 2em;">
+              <span>
+                <label>Start Time</label>
+                <span>[[ getCurrentTask(selectedDispatch).start_time || 'N/A' ]]</span>
+              </span>
+              <span>
+                <label>End Time</label>
+                <span>[[ getCurrentTask(selectedDispatch).end_time || 'N/A' ]]</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          <p>No current task.</p>
+        </div>
+      </div>
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+  <!-- Edit Tasks Modal -->
+  <div v-if="selectedDispatch && editTasksModalOpen" class="modal-backdrop">
+    <div class="modal-content modal-content-wide">
+      <div class="modal-header">
+        <h2>Tasks: [[ selectedDispatch.reference ]]</h2>
+        <button class="close-btn" @click="closeEditTasksModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="slab-area" data-marker="task-area">
+          <div v-for="(task, idx) in selectedDispatch.plan" :key="idx" data-marker="task" class="slab-container">
+            <div class="slab-header">
+              <h4>Task [[ idx + 1 ]]</h4>
+              <span class="status-badge" :class="`status-badge-${task.status.toLowerCase().replace(/_/g, '-')}`">
+                [[ task.status.replace(/_/g, ' ') ]]
+              </span>
+              
+            </div>
+            <div class="form-field">
+              <label>Location</label>
+              <div class="dropdown">
+                <input
+                  type="text"
+                  v-model="editableTasks[idx].locationSearch"
+                  @focus="editableTasks[idx].showLocationDropdown = true"
+                  @blur="hideLocationDropdown(idx)"
+                  autocomplete="off">
+                <div v-if="editableTasks[idx].showLocationDropdown && getFilteredLocations(idx).length > 0" class="dropdown-list">
+                  <div
+                    v-for="location in getFilteredLocations(idx)"
+                    :key="location.id"
+                    @mousedown="selectLocation(idx, location)"
+                    class="dropdown-option">
+                    [[ location.name ]]
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Instruction</label>
+              <span>[[ task.instruction ? formatInstruction(task.instruction) : 'N/A' ]]</span>
+            </div>
+            <div class="form-field">
+              <label>Container</label>
+              <span>[[ task.container_number || 'None' ]]</span>
+            </div>
+            <div class="form-field">
+              <label>Date</label>
+              <span>[[ task.date || 'N/A' ]]</span>
+            </div>
+            <div class="form-field">
+              <label>Appointment Type</label>
+              <span>[[ task.appointment_type ? formatInstruction(task.appointment_type) : 'None' ]]</span>
+            </div>
+            <div class="form-field">
+              <label>Start Time</label>
+              <span>[[ task.start_time || 'N/A' ]]</span>
+            </div>
+            <div class="form-field">
+              <label>End Time</label>
+              <span>[[ task.end_time || 'N/A' ]]</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"></div>
+    </div>
+  </div>
+  <!-- Dispatch List -->
+  <div class="container-content">
+    <div v-for="dispatch in dispatches" :key="dispatch.reference" class="dispatch-row">
+      <div class="slab-container">
+        <div>[[ dispatch.reference ]]</div>
+        <div>[[ dispatch.broker_name ]]</div>
+        <div class="dropdown" v-if="dispatch.containers && dispatch.containers.length > 0">
+          <div class="dropdown-toggle" @click.stop="toggleDropdown(dispatch.id, 'con')">
+            <span>[[ dispatch.containers[0].number ]]</span>
+            <span class="dropdown-arrow" :class="{ open: isOpen(dispatch.id, 'con') }">⌵</span>
+          </div>
+          <div v-if="isOpen(dispatch.id, 'con')" class="dropdown-menu">
+            <div class="dropdown-item" v-for="(con, idx) in dispatch.containers" :key="idx">
+              [[ con.number ]]
+            </div>
+          </div>
+        </div>
+        <div>[[ dispatch.current_driver_name ]]</div>
+        <div>
+          <button class="btn-card" style="font-size: 1em;" type="button" @click="openCurrentTaskModal(dispatch)">
+          Task
+          [[ getCurrentTask(dispatch).priority ]]:
+          [[ formatInstruction(getCurrentTask(dispatch).instruction) ]] <span class="status-badge" :class="`status-badge-${getCurrentTask(dispatch).status.toLowerCase().replace(/_/g, '-')}`">[[ formatStatus(getCurrentTask(dispatch).status) ]]</span></button>
+        </div>
+        <div><button class="btn-card" style="font-size: 1em;" type="button" @click="openEditTasksModal(dispatch)">Edit Tasks</button></div>
+        <div @click.stop="toggleDropdown(dispatch.id, 'expand')">⌵</div>
+      </div>
+      <div v-if="isOpen(dispatch.id, 'expand')" class="slab-container accordion">
+        <p>Reference: [[ dispatch.reference ]]</p>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script> 
+  createApp({
+    delimiters: ['[[', ']]'],
+    data() {
+      return {
+        openDropdowns: {},
+        selectedDispatch: null,
+        editTasksModalOpen: false,
+        currentTaskModalOpen: false,
+        locations: [],
+        dispatches: [
+          {% for dispatch in dispatches %}
+            {
+              id: "{{ dispatch.id }}",
+              reference: "{{ dispatch.reference }}",
+              status: "{{ dispatch.status }}",
+              broker_name: "{{ dispatch.broker_name }}",
+              current_driver_name: "{{ dispatch.current_driver_name }}",
+              assigned_drivers: {{ dispatch.assigned_drivers|tojson }},
+              containers: {{ dispatch.containers|tojson }},
+              appointments: {{ dispatch.appointments|tojson }},
+              plan: {{ dispatch.plan|tojson }}
+            }{{ "," if not loop.last }}
+          {% endfor %}
+        ],
+
+      }
+    },
+    mounted() {
+      this.fetchLocations();
+    },
+    methods: {
+      getCurrentTask(dispatch) {
+        if (!dispatch.plan || !dispatch.plan.length) return null;
+        const terminalStatuses = ['completed', 'voided', 'stopped_off'];
+        return dispatch.plan.find(task => !terminalStatuses.includes(task.status)) || null;
+      },
+      openCurrentTaskModal(dispatch) {
+        this.selectedDispatch = dispatch;
+        this.currentTaskModalOpen = true;
+      },
+      closeCurrentTaskModal() {
+        this.currentTaskModalOpen = false;
+        this.selectedDispatch = null;
+      },
+      openEditTasksModal(dispatch) {
+        this.selectedDispatch = dispatch;
+        this.editableTasks = dispatch.plan.map(task => ({
+          ...task,
+          locationSearch: task.location_name || '',
+          selectedLocationId: task.location_id || '',
+          showLocationDropdown: false,
+        }));
+        this.editTasksModalOpen = true;
+      },
+      closeEditTasksModal() {
+        this.editTasksModalOpen = false;
+        this.selectedDispatch = null;
+      },
+      formatStatus(status) {
+        if (!status) return '';
+        return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      },
+      formatInstruction(instruction) {
+        if (!instruction) return '';
+        return instruction.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      },
+      toggleDropdown(id, type) {
+        const key = `${id}-${type}`;
+        this.openDropdowns[key] = !this.openDropdowns[key];
+      },
+      isOpen(id, type) {
+        return !!this.openDropdowns[`${id}-${type}`];
+      },
+      getActiveTask(dispatch) {
+        return dispatch.plan.find(task => task.status === 'in_progress') || '';
+      },
+      getNotStartedTask(dispatch) {
+        console.log(dispatch.plan.find(task => task.status === 'in_progress'))
+        console.log(dispatch.plan.find(task => task.status === 'not_started'))
+        return dispatch.plan.find(task => task.status === 'not_started') || '';
+      },
+      async fetchLocations() {
+        try {
+          const response = await fetch('{{ url_for("location.get_active_locations") }}');
+          const data = await response.json();
+          this.locations = data;
+        } catch (error) {
+          console.error('Error fetching locations:', error);
+        }
+      },
+      getFilteredLocations(taskIndex) {
+        const task = this.editableTasks[taskIndex];
+        if (!task.locationSearch) return this.locations;
+        const search = task.locationSearch.toLowerCase();
+        return this.locations.filter(location =>
+          location.name.toLowerCase().includes(search)
+        );
+      },
+      selectLocation(taskIndex, location) {
+        this.editableTasks[taskIndex].locationSearch = location.name;
+        this.editableTasks[taskIndex].selectedLocationId = location.id;
+        this.editableTasks[taskIndex].showLocationDropdown = false;
+      },
+      hideLocationDropdown(taskIndex) {
+        setTimeout(() => {
+          this.editableTasks[taskIndex].showLocationDropdown = false;
+        }, 200);
+      },
+      getNextTask(tasks) {
+        return tasks.findIndex(task => task.status === 'not_started');
+      },
+      startTask(task) {
+        console.log('start task', task);
+      }
+    },
+  }).mount('[data-page="loadboard"]');
+</script>
+{% endblock %}

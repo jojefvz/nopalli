@@ -143,6 +143,86 @@ class StartDispatchRequest:
             "dispatch_id": UUID(self.dispatch_id),
         }
 
+
+@dataclass(frozen=True)
+class GetLoadboardDispatchesRequest:
+    """Request data for creating a new dispatch."""
+
+    date: str
+
+    def __post_init__(self) -> None:
+        """Validate request data"""
+        # if not self.name.strip():
+        #     raise ValueError("Dispatch name is required")
+        pass
+    
+    
+    def to_execution_params(self) -> dict:
+        """Convert request data to use case parameters."""
+        return {
+            "date": date.fromisoformat(self.date),
+        }
+
+
+@dataclass(frozen=True)
+class StartTaskRequest:
+    """Request to start current task on in progress dispatch."""
+
+    dispatch_id: str
+    task_priority: str
+
+    def __post_init__(self) -> None:
+        """Validate request data"""
+        pass
+    
+    
+    def to_execution_params(self) -> dict:
+        """Convert request data to use case parameters."""
+        return {
+            "dispatch_id": UUID(self.dispatch_id),
+            "task_priority": int(self.task_priority),
+        }
+    
+
+@dataclass(frozen=True)
+class RevertTaskRequest:
+    """Request to revert current task on in progress dispatch."""
+
+    dispatch_id: str
+    task_priority: str
+
+    def __post_init__(self) -> None:
+        """Validate request data"""
+        pass
+    
+    
+    def to_execution_params(self) -> dict:
+        """Convert request data to use case parameters."""
+        return {
+            "dispatch_id": UUID(self.dispatch_id),
+            "task_priority": int(self.task_priority),
+        }
+    
+@dataclass(frozen=True)
+class CompleteTaskRequest:
+    """Request to revert current task on in progress dispatch."""
+
+    dispatch_id: str
+    task_priority: str
+
+    def __post_init__(self) -> None:
+        """Validate request data"""
+        pass
+    
+    
+    def to_execution_params(self) -> dict:
+        """Convert request data to use case parameters."""
+        return {
+            "dispatch_id": UUID(self.dispatch_id),
+            "task_priority": int(self.task_priority),
+        }
+
+
 @dataclass(frozen=True)
 class DispatchResponse:
     """Response data for basic dispatch operations."""
@@ -159,7 +239,6 @@ class DispatchResponse:
     @classmethod
     def from_entity(cls, dispatch: Dispatch) -> Self:
         """Create response from a Dispatch entity."""
-        print("DISPATCH RESPONSE CONTAINERS:", dispatch.containers)
         return cls(
             id=str(dispatch.id),
             reference=dispatch.reference,
@@ -170,4 +249,68 @@ class DispatchResponse:
             containers=dispatch.containers,
             appointments=dispatch.appointments,
             plan=[TaskResponse.from_entity(task) for task in dispatch.plan],   
+        )
+    
+
+@dataclass(frozen=True)
+class StartDispatchResponse:
+    """Response data for basic dispatch operations."""
+    id: str
+    reference: int
+    status: DispatchStatus
+    broker: Broker
+    current_driver: Optional[Driver]
+    containers: list[Container]
+    plan: list[Task]
+    errors: list[str]
+    
+    @classmethod
+    def from_entity_and_errors(cls, dispatch: Dispatch, errors: list) -> Self:
+        """Create response after calling to start dispatch."""
+        return cls(
+            id=str(dispatch.id),
+            reference=dispatch.reference,
+            status=dispatch.status,
+            broker=dispatch.broker,
+            current_driver=dispatch.current_driver,
+            containers=dispatch.containers,
+            plan=dispatch.plan,
+            errors=errors
+        )
+
+
+@dataclass(frozen=True)
+class StartTaskResponse:
+    """Response data for basic dispatch operations."""
+    reference: int
+    
+    @classmethod
+    def from_entity(cls, dispatch: Dispatch) -> Self:
+        """Create response from a Dispatch entity."""
+        return cls(
+            reference=dispatch.reference,
+        )
+    
+@dataclass(frozen=True)
+class RevertTaskResponse:
+    """Response data for basic dispatch operations."""
+    reference: int
+    
+    @classmethod
+    def from_entity(cls, dispatch: Dispatch) -> Self:
+        """Create response from a Dispatch entity."""
+        return cls(
+            reference=dispatch.reference,
+        )
+    
+@dataclass(frozen=True)
+class CompleteTaskResponse:
+    """Response data for basic dispatch operations."""
+    reference: int
+    
+    @classmethod
+    def from_entity(cls, dispatch: Dispatch) -> Self:
+        """Create response from a Dispatch entity."""
+        return cls(
+            reference=dispatch.reference,
         )

@@ -3,10 +3,18 @@ from dataclasses import dataclass
 from src.application.common.result import Error, Result
 from src.application.dtos.dispatch_dtos import (
     CreateDispatchRequest,
-    DispatchResponse,
     GetDispatchRequest,
     EditDispatchRequest,
-    StartDispatchRequest
+    StartDispatchRequest,
+    GetLoadboardDispatchesRequest,
+    StartTaskRequest,
+    RevertTaskRequest,
+    CompleteTaskRequest,
+    DispatchResponse,
+    StartDispatchResponse,
+    StartTaskResponse,
+    RevertTaskResponse,
+    CompleteTaskResponse,
 )
 from src.application.repositories.broker_repository import BrokerRepository
 from src.application.repositories.dispatch_repository import DispatchRepository
@@ -15,7 +23,6 @@ from src.application.repositories.location_repository import LocationRepository
 from src.application.repositories.task_repository import TaskRepository
 from src.domain.exceptions import ValidationError, BusinessRuleViolation
 from src.domain.services import Dispatcher
-from src.infrastructure.web.routes.dispatch.routes import edit_dispatch
 
 
 @dataclass
@@ -193,9 +200,92 @@ class StartDispatchUseCase:
             params = request.to_execution_params()
             dispatch = self.dispatch_repository.get(params['dispatch_id'])
 
-            Dispatcher.start_dispatch(params['dispatch_id'], dispatch.current_driver)
+            errors = Dispatcher.start_dispatch(dispatch)
+
+            self.dispatch_repository.save(dispatch)
             
-            return Result.success(DispatchResponse.from_entity(dispatch))
+            return Result.success(StartDispatchResponse.from_entity_and_errors(dispatch, errors))
+        
+        except ValidationError as e:
+            return Result.failure(Error.validation_error(str(e)))
+        except BusinessRuleViolation as e:
+            return Result.failure(Error.business_rule_violation(str(e)))
+
+
+@dataclass
+class GetLoadboardDispatchesUseCase:
+    """Use case for listing all the dispatches."""
+
+    dispatch_repository: DispatchRepository
+
+    def execute(self, request: GetLoadboardDispatchesRequest):
+        try:
+            params = request.to_execution_params()
+            dispatches = self.dispatch_repository.get_loadboard_by_date(params['date'])
+
+            return Result.success([DispatchResponse.from_entity(dis) for dis in dispatches])
+        
+        except ValidationError as e:
+            return Result.failure(Error.validation_error(str(e)))
+        except BusinessRuleViolation as e:
+            return Result.failure(Error.business_rule_violation(str(e)))
+
+@dataclass
+class StartTaskUseCase:
+    dispatch_repository: DispatchRepository
+
+    def execute(self, request: StartTaskRequest):
+        try:
+            params = request.to_execution_params()
+            dispatch = self.dispatch_repository.get(params['dispatch_id'])
+            dispatch.start_task(params['task_priority'])
+            print('USE CASE: Check In Time: ', dispatch.get_task(params['task_priority'])._check_in_datetime)
+
+            self.dispatch_repository.save(dispatch)
+
+            return Result.success(StartTaskResponse.from_entity(dispatch))
+        
+        except ValidationError as e:
+            return Result.failure(Error.validation_error(str(e)))
+        except BusinessRuleViolation as e:
+            return Result.failure(Error.business_rule_violation(str(e)))
+        
+@dataclass
+class RevertTaskUseCase:
+    dispatch_repository: DispatchRepository
+
+    def execute(self, request: RevertTaskRequest):
+        try:
+            params = request.to_execution_params()
+            dispatch = self.dispatch_repository.get(params['dispatch_id'])
+            dispatch.revert_task(params['task_priority'])
+            print('USE CASE: Check In Time: ', dispatch.get_task(params['task_priority'])._check_in_datetime)
+
+            self.dispatch_repository.save(dispatch)
+
+            return Result.success(RevertTaskResponse.from_entity(dispatch))
+        
+        except ValidationError as e:
+            return Result.failure(Error.validation_error(str(e)))
+        except BusinessRuleViolation as e:
+            return Result.failure(Error.business_rule_violation(str(e)))
+        
+@dataclass
+class CompleteTaskUseCase:
+    dispatch_repository: DispatchRepository
+
+    def execute(self, request: CompleteTaskRequest):
+        try:
+            params = request.to_execution_params()
+            dispatch = self.dispatch_repository.get(params['dispatch_id'])
+            dispatch.complete_task(params['task_priority'])
+            print('USE CASE: Check In Time: ', dispatch.get_task(params['task_priority'])._check_in_datetime)
+            print('USE CASE: Check Out Time: ', dispatch.get_task(params['task_priority'])._check_out_datetime)
+            print('USE CASE: Completed By: ', dispatch.get_task(params['task_priority'])._completed_by)
+
+            self.dispatch_repository.save(dispatch)
+
+            return Result.success(CompleteTaskResponse.from_entity(dispatch))
         
         except ValidationError as e:
             return Result.failure(Error.validation_error(str(e)))

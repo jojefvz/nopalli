@@ -1,12 +1,14 @@
 from typing import Optional
 
 from src.domain.aggregates.broker.aggregate import Broker
+from src.domain.aggregates.dispatch.value_objects import Instruction
 from src.domain.aggregates.driver.aggregate import Driver
+from src.domain.aggregates.driver.value_objects import DriverStatus
 
 from src.domain.common.entity import AggregateRoot
 from src.domain.exceptions import BusinessRuleViolation
 from .entities import Task
-
+from .utilities import _ALLOWED_FOLLOWS, _ENDABLE, _STARTABLE
 from .value_objects import Appointment, DispatchStatus, TaskStatus
 
 
@@ -26,6 +28,7 @@ class Dispatch(AggregateRoot):
         self.broker = broker
         self.current_driver = current_driver
         self.plan = plan
+        self._current_task = Optional[Task] = None
 
     @property
     def status(self):
@@ -39,6 +42,10 @@ class Dispatch(AggregateRoot):
         return list(dict.fromkeys(drivers))
     
     @property
+    def current_container(self):
+        curr_container = [task.container for task in self.plan if task.status == 'in_progress']
+        return curr_container[0] if curr_container else None
+    @property
     def containers(self):
         containers = [task.container for task in self.plan if task.container]
         return list(dict.fromkeys(containers))
@@ -46,12 +53,68 @@ class Dispatch(AggregateRoot):
     @property
     def appointments(self):
         return [(task.date, task.appointment) for task in self.plan if task.appointment]
+    
+    def _containers_assigned(self) -> bool:
+        for task in self.plan:
+            if task.instruction in (
+                Instruction.FETCH_CHASSIS,
+                Instruction.BOBTAIL_TO,
+                Instruction.TERMINATE_CHASSIS,
+            ):
+                continue
+            elif not task.container:
+                return False
+        return True
+    
+    def _get_invalid_transition(self) -> tuple | None:
+        if self.plan[0].instruction not in _STARTABLE:
+            return (None, self.plan[0].instruction)
+        
+        for idx in range(len(self.plan) - 1):
+            current = self.plan[idx].instruction
+            next_instruction = self.plan[idx + 1].instruction
+            if next_instruction not in _ALLOWED_FOLLOWS[current]:
+                return (current, next_instruction)
+        
+        if self.plan[-1].instruction not in _ENDABLE:
+            return (self.plan[-1].instruction, None)
+        
+        return None
+
+    def _get_start_errors(self) -> list:
+        errors = []
+        if not self.current_driver:
+            errors.append('A driver has not been assigned to dispatch.')
+        if self.current_driver.status != DriverStatus.AVAILABLE:
+            errors.append('Driver is not available to be dispatched.')
+        if not self.appointments:
+            errors.append('An appointment has not been set on at least one task.')
+        if not self._containers_assigned:
+            errors.append('Certain stops are missing their container assignment.')
+
+        invalid_transition = self._get_invalid_transition()
+        if invalid_transition:
+            current, next_instruction = invalid_transition
+            if current is None:
+                errors.append(f'{next_instruction.value} is not a valid starting instruction.')
+            elif next_instruction is None:
+                errors.append(f'{current.value} is not a valid ending instruction.')
+            else:
+                errors.append(f'{next_instruction.value} cannot follow {current.value}.')
+
+        return errors
 
     def start(self) -> None:
-        self._verify_dispatch_before_starting()
         if self._status != DispatchStatus.DRAFT:
             raise BusinessRuleViolation('Only a draft dispatch can be started.')
+        
+        errors = self._get_start_errors()
+        if errors:
+            return errors
+        
         self._status = DispatchStatus.IN_PROGRESS
+        self._current_task = self.plan[0]
+        return []
 
     def pause(self) -> None:
         if self._status != DispatchStatus.IN_PROGRESS:
@@ -97,6 +160,17 @@ class Dispatch(AggregateRoot):
         
         self._status = DispatchStatus.DRAFT
 
+    def advance_to_next_task(self) -> None:
+        if self._status != DispatchStatus.IN_PROGRESS:
+            raise ValueError('Only a dispatch in progress can proceed to next task.')
+        for i in range(len(self.plan)):
+            if self.plan[i] == self.plan[-1]:
+                raise ValueError('Cannot advance from final task.')
+            if self.plan[i].status != TaskStatus.COMPLETED or self.plan[i].status != TaskStatus.STOP_OFF:
+                raise ValueError('Can only advance from a task that is completed or a stop off task.')
+            
+            self._current_task = self.plan[i + 1]
+
     def start_task(self, priority: int) -> None:
         if self.status != DispatchStatus.IN_PROGRESS:
             raise ValueError('Only a dispatch in progress can start a task.')
@@ -109,7 +183,7 @@ class Dispatch(AggregateRoot):
         if self.status != DispatchStatus.IN_PROGRESS:
             raise ValueError('Only a dispatch in progress can complete a task.')
         
-        self.get_task(priority).complete(self.driver)
+        self.get_task(priority).complete(self.current_driver)
     
     def revert_task(self, priority: int) -> None:
         if self.status != DispatchStatus.IN_PROGRESS:

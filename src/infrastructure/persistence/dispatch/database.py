@@ -1,11 +1,12 @@
-from typing import final
+from datetime import date
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload, sessionmaker
 
 from src.domain.aggregates.dispatch.aggregate import Dispatch
 from src.domain.aggregates.dispatch.entities import Task
+from src.domain.aggregates.dispatch.value_objects import DispatchStatus
 from src.domain.exceptions import DispatchNotFoundError
 from src.application.repositories.dispatch_repository import DispatchRepository
 
@@ -50,6 +51,39 @@ class SQLAlchemyDispatchRepository(DispatchRepository):
 
         try:
             dispatches = session.scalars(select(Dispatch)).all()
+            session.expunge_all()
+            return dispatches
+        finally:
+            session.close()
+    
+    def get_loadboard_by_date(self, date: date) -> list[Dispatch]:
+        """
+        Retrieve all in progress dispatches by date.
+        """
+        session = self.session_factory()
+
+        try:
+            earliest_appointment = session.query(
+            Task.dispatch_id,
+            func.min(Task.date).label('earliest_date')
+            ).filter(
+                Task.appointment_type.isnot(None)
+            ).group_by(
+                Task.dispatch_id
+            ).subquery()
+
+            dispatches = session.query(Dispatch).join(
+                earliest_appointment,
+                earliest_appointment.c.dispatch_id == Dispatch.id
+            ).filter(
+                Dispatch._status == DispatchStatus.IN_PROGRESS,
+                earliest_appointment.c.earliest_date == date
+            ).options(
+                joinedload(Dispatch.broker),
+                joinedload(Dispatch.current_driver),
+                joinedload(Dispatch.plan).joinedload(Task.location),
+            ).all()
+
             session.expunge_all()
             return dispatches
         finally:

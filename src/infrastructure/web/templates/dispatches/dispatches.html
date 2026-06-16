@@ -2,22 +2,25 @@
 
 {% block main_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/containers.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dispatches/dispatches.css') }}">
 {% endblock %}
 
 {% block content %}
 <main class="container" data-page="dispatches">
-  <div class="container-header">
-    <h2>Dispatches</h2>
-    <a class="anchor" href="{{ url_for('dispatch.create_dispatch') }}">New Dispatch</a>
+  <div class="slab-container">
+    <span class="line-box">Dispatches</span>
+    <a
+    class="anchor"
+    href="{{ url_for('dispatch.create_dispatch') }}">New Dispatch</a>
   </div>
 
   <!-- Start Dispatch Modal - reused for all dispatches -->
   <div v-if="selectedDispatch && startDispatchModalOpen" class="modal-backdrop">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Starting: Dispatch [[ selectedDispatch.reference ]]</h2>
+        <h2>
+          [[ startData && startData.errors && startData.errors.length > 0 ? 'Could Not Start' : 'Successfully Started' ]]: Dispatch [[ selectedDispatch.reference ]]
+        </h2>
         <button class="close-btn" @click="closeStartDispatchModal">×</button>
       </div>
       <div class="modal-body">
@@ -25,17 +28,25 @@
         <div v-else-if="startError">[[ startError ]]</div>
         <div v-else-if="startData">
           <p><strong>Reference:</strong> [[ startData.reference ]]</p>
-          <p><strong>Status:</strong> [[ startData.status ]]</p>
+          <p><strong>Status:</strong> [[ formatStatus(startData.status) ]]</p>
           <p><strong>Broker:</strong> [[ startData.broker_name ]]</p>
-          <p><strong>Driver:</strong> [[ startData.current_driver ]]</p>
+          <p><strong>Driver:</strong> [[ startData.current_driver_name ]]</p>
 
-          <h4>Plan</h4>
+          <div v-if="startData.errors && startData.errors.length > 0">
+            <h3>Warnings</h3>
+            <ul>
+              <li v-for="(err, idx) in startData.errors" :key="idx">[[ err ]]</li>
+            </ul>
+          </div>
+
+          <h3>Current Plan</h3>
           <div v-for="(task, idx) in startData.plan" :key="task.id" style="margin-bottom: 1em">
             <strong>Stop [[ idx + 1 ]]: [[ task.instruction ]]</strong><br>
             <span>[[ task.location_name ]]</span><br>
             <span v-if="task.container_number"><strong>Container:</strong> [[ task.container_number ]]</span><br>
             <span><strong>Date:</strong> [[ task.date ]]</span><br>
-            <span v-if="task.appointment_type"><strong>Appointment:</strong> [[ task.appointment_type ]]
+            <span v-if="task.appointment_type"><strong>Appointment:</strong>
+              [[ formatAppointmentType(task.appointment_type) ]]
               [[ task.start_time ? '- Start ' + task.start_time : '' ]]
               [[ task.end_time ? 'End ' + task.end_time : '' ]]
             </span>
@@ -48,51 +59,64 @@
   
   <!-- Dispatch List -->
   <div class="container-content">
-    <div v-for="dispatch in dispatches" :key="dispatch.reference" class="object-container">
-      <div class="object-header">
-        <strong>Dispatch: [[ dispatch.reference ]] ([[ dispatch.status ]])</strong><br><br>
-        <a :href="`/dispatches/${dispatch.id}/edit`">Edit</a><br><br>
-        <button 
-        type="button" 
-        class="btn"
-        @click="openStartDispatchModal(dispatch)">Start Dispatch</button>
+    <div v-for="dispatch in dispatches" :key="dispatch.reference" class="slab-container">
+      <div class="slab-left">
+        <span class="dispatch-ref">[[ dispatch.reference ]]</span>
+        <span class="status-badge" :class="`status-badge-${dispatch.status.toLowerCase().replace(/_/g, '-')}`">[[ dispatch.status.replace(/_/g, ' ') ]]</span>
+        <div>
+          <a class="btn-card" style="font-size: .8em;" :href="`/dispatches/${dispatch.id}/edit`">Edit</a>
+        </div>
       </div>
-      <div class="object-body">
-        <span><strong>Broker </strong>[[ dispatch.broker_name ]]</span>
-        <span><strong>Appointment[[ dispatch.appointments && dispatch.appointments.length === 1 ? '' : 's' ]]</strong>
-          <select v-if="dispatch.appointments && dispatch.appointments.length > 0">
-            <option 
-              v-for="(appt, idx) in dispatch.appointments"
-              :key="idx"
-              :selected="idx === 0"
-              disabled>
-              [[ appt.appointment_type ]] [[ appt.start_time ? '- Start ' + appt.start_time : '' ]]  [[ appt.end_time ? 'End ' + appt.end_time : '' ]]
-            </option>
-          </select>
-        </span>
-        <span><strong>Container[[ dispatch.containers && dispatch.containers.length === 1 ? '' : 's' ]]</strong>
-          <select v-if="dispatch.containers && dispatch.containers.length > 0">
-            <option 
-              v-for="(con, idx) in dispatch.containers"
-              :key="idx"
-              :selected="idx === 0"
-              disabled>
+      <div class="slab-middle">
+        <div class="display-broker">[[ dispatch.broker_name ]]</div>
+        <!-- Appointments -->
+        <div v-if="dispatch.appointments && dispatch.appointments.length > 0" class="dropdown display-appts">
+          <div class="dropdown-toggle" @click.stop="toggleDropdown(dispatch.id, 'appt')">
+            <span>[[ formatAppointmentType(dispatch.appointments[0].date) ]] [[ dispatch.appointments[0].start_time ? dispatch.appointments[0].start_time : '' ]] [[ dispatch.appointments[0].end_time ? '- ' + dispatch.appointments[0].end_time : '' ]]</span>
+            <span class="dropdown-arrow" :class="{ open: isOpen(dispatch.id, 'appt') }">⌵</span>
+          </div>
+          <div v-if="isOpen(dispatch.id, 'appt')" class="dropdown-menu">
+            <div class="dropdown-item" v-for="(appt, idx) in dispatch.appointments" :key="idx">
+              [[ formatAppointmentType(appt.date) ]] [[ appt.start_time ? appt.start_time : '' ]] [[ appt.end_time ? '- ' + appt.end_time : '' ]]
+            </div>
+          </div>
+        </div>
+        <!-- Containers -->
+        <div class="dropdown display-containers" v-if="dispatch.containers && dispatch.containers.length > 0">
+          <div class="dropdown-toggle" @click.stop="toggleDropdown(dispatch.id, 'con')">
+            <span>[[ dispatch.containers[0].number ]]</span>
+            <span class="dropdown-arrow" :class="{ open: isOpen(dispatch.id, 'con') }">⌵</span>
+          </div>
+          <div v-if="isOpen(dispatch.id, 'con')" class="dropdown-menu">
+            <div class="dropdown-item" v-for="(con, idx) in dispatch.containers" :key="idx">
               [[ con.number ]]
-            </option>
-          </select>
-        </span>
-        <span><strong>Driver[[ dispatch.assigned_drivers && dispatch.assigned_drivers.length === 1 ? '' : 's' ]]</strong>
-          <select v-if="dispatch.assigned_drivers && dispatch.assigned_drivers.length > 0">
-            <option 
-              v-for="(name, idx) in dispatch.assigned_drivers"
-              :key="idx"
-              :selected="idx === 0"
-              disabled>
-              [[ name ]][[ name === dispatch.current_driver ? ' - Current' : '']]
-            </option>
-          </select>
-          <span v-else>No drivers assigned</span>
-        </span>
+            </div>
+          </div>
+        </div>
+        <!-- Drivers -->
+        <div class="dropdown display-drivers" v-if="dispatch.assigned_drivers && dispatch.assigned_drivers.length > 0">
+          <div class="dropdown-toggle" @click.stop="toggleDropdown(dispatch.id, 'driver')">
+            <span>[[ dispatch.assigned_drivers[0] ]][[ dispatch.assigned_drivers[0] === dispatch.current_driver ? ' - Current' : '' ]]</span>
+            <span class="dropdown-arrow" :class="{ open: isOpen(dispatch.id, 'driver') }">⌵</span>
+          </div>
+          <div v-if="isOpen(dispatch.id, 'driver')" class="dropdown-menu">
+            <div class="dropdown-item" v-for="(name, idx) in dispatch.assigned_drivers" :key="idx">
+              [[ name ]][[ name === dispatch.current_driver ? ' - Current' : '' ]]
+            </div>
+          </div>
+        </div>
+        <div class="display-drivers" v-if="!dispatch.assigned_drivers || dispatch.assigned_drivers.length === 0">No drivers assigned</div>
+      </div>
+      <!-- Actions -->
+      <div class="slab-right display-actions">
+        <div class="card-actions-menu" :class="{ visible: isActionsOpen(dispatch.id) }">
+          <button v-if="dispatch.status === 'Draft'" type="button" class="card-actions-item" @click="openStartDispatchModal(dispatch)">Start Dispatch</button>
+          <span v-else class="card-actions-item">Currently [[ dispatch.status ]]</span>
+          <a class="card-actions-item" :href="`/dispatches/${dispatch.id}/files`">Add Files</a>
+          <a class="card-actions-item" :href="`/dispatches/${dispatch.id}/assign_driver`">Assign Driver</a>
+          <a class="card-actions-item" :href="`/dispatches/${dispatch.id}`">View Details</a>
+        </div>
+        <button class="card-actions-toggle" :class="{ open: isActionsOpen(dispatch.id) }" @click.stop="toggleActions(dispatch.id)">⌵</button>
       </div>
     </div>
   </div>
@@ -105,6 +129,7 @@
     delimiters: ['[[', ']]'],
     data() {
       return {
+        openDropdowns: {},
         startDispatchModalOpen: false,
         selectedDispatch: null,
         startData: null,
@@ -126,6 +151,12 @@
           {% endfor %}
         ],
       }
+    },
+    mounted() {
+      document.addEventListener('click', this.handleOutsideClick);
+    },
+    unmounted() {
+      document.removeEventListener('click', this.handleOutsideClick);
     },
     methods: {
       async openStartDispatchModal(dispatch) {
@@ -154,6 +185,34 @@
         this.startData = null;
         this.startError = null;
       },
+      formatStatus(status) {
+        return status.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      },
+      formatAppointmentType(type) {
+        if (!type || typeof type !== 'string') return '';
+        return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      },
+      toggleDropdown(id, type) {
+        const key = `${id}-${type}`;
+        this.openDropdowns[key] = !this.openDropdowns[key];
+      },
+      isOpen(id, type) {
+        return !!this.openDropdowns[`${id}-${type}`];
+      },
+      handleOutsideClick() {
+        this.openDropdowns = {};
+      },
+      toggleActions(id) {
+        const key = `actions-${id}`;
+        this.openDropdowns[key] = !this.openDropdowns[key];
+      },
+      isActionsOpen(id) {
+        return !!this.openDropdowns[`actions-${id}`];
+      },
+      cancelDispatch(dispatch) {
+        // placeholder
+        console.log('cancel', dispatch.id);
+      }
     }
   }).mount('[data-page="dispatches"]');
 </script>

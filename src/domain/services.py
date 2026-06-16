@@ -54,6 +54,18 @@ class Dispatcher:
         return Dispatch(broker, current_driver, plan)
     
     @staticmethod
+    def start_dispatch(dispatch: Dispatch) -> list[str]:
+        errors = dispatch.start()
+        if errors:
+            return errors
+        try:
+            dispatch.current_driver.begin_operating()
+        except BusinessRuleViolation:
+            if dispatch.status == DispatchStatus.IN_PROGRESS: # driver causes the error
+                dispatch.revert_to_draft()
+            raise
+    
+    @staticmethod
     def assign_driver(dispatch: Dispatch, driver: Driver):
         if dispatch.status == DispatchStatus.IN_PROGRESS:
             raise ValueError('A dispatch in progress cannot have a driver assigned.')
@@ -75,70 +87,6 @@ class Dispatcher:
         if dispatch.status == DispatchStatus.IN_PROGRESS:
             raise ValueError('Cannot remove a driver from a dispatch that is in progress.')
         dispatch.driver_ref = None
-    
-    @staticmethod
-    def verify_dispatch_before_starting(dispatch: Dispatch, driver: Driver) -> None:
-        if not self.driver:
-            raise ValueError('A driver has not been assigned to dispatch.')
-        if not self._appointment_exists():
-            raise ValueError('An appointment has not been set on at least one task.')
-        if not self._containers_assigned():
-            raise ValueError('A multi-container dispatch requires containers to be assigned to tasks.')
-        if not self._valid_plan():
-            raise ValueError('Plan instructions are not valid.')
-        
-    def _appointment_exists(self) -> bool:
-        for task in self.plan:
-            if task.appointment:
-                return True
-        return False
-    
-    def _containers_assigned(self) -> bool:
-        for task in self.plan:
-            if task.instruction in (
-                Instruction.FETCH_CHASSIS,
-                Instruction.BOBTAIL_TO,
-                Instruction.TERMINATE_CHASSIS,
-            ):
-                continue
-            elif not task.container:
-                return False
-        return True
-    
-    def _valid_plan(self) -> bool:
-        # Check first task
-        if self.plan[0].instruction not in _STARTABLE:
-            return False
-        
-        # Walk through tasks
-        for idx in range(0, len(self.plan) - 1):
-            current = self.plan[idx].instruction
-            next = self.plan[idx + 1].instruction
-
-            allowed = _ALLOWED_FOLLOWS[current]
-
-            if not allowed and next:
-                return False
-            if allowed and next not in allowed:
-                return False
-    
-        # Check last task
-        if self.plan[-1].instruction not in _ENDABLE:
-            return False
-
-        return True
-
-    @staticmethod
-    def start_dispatch(dispatch: Dispatch, driver: Driver):
-        try:
-            initial_dispatch_status = dispatch.status
-            dispatch.start()
-            driver.begin_operating()
-        except ValueError as err:
-            if initial_dispatch_status == DispatchStatus.DRAFT \
-                and dispatch.status == DispatchStatus.IN_PROGRESS: # driver causes the error
-                dispatch.revert_to_draft()
-            raise err  
 
     @staticmethod
     def revert_dispatch_to_draft(dispatch: Dispatch, driver: Driver):

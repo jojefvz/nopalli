@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nopalli</title>
-    <link rel="stylesheet" href="../static/css/base.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
     {% block main_css %}{% endblock %}
 </head>
 <body>
@@ -19,10 +20,10 @@
           @click="toggleDropdown('dispatch')"
           @blur="closeDropdown('dispatch')">
             <span>Dispatch</span>
-            <span class="dropdown-arrow" :class="{ open: openDropdown === 'dispatch' }">▼</span>
+            <span class="dropdown-arrow" :class="{ open: openDropdown === 'dispatch' }">⌵</span>
           </button>
           <div v-if="openDropdown === 'dispatch'" class="dropdown-menu">
-            <a class="dropdown-item" href="">Loadboard</a>
+            <a class="dropdown-item" href="{{ url_for('dispatch.loadboard', board_date=today) }}">Loadboard</a>
             <a class="dropdown-item" href="{{ url_for('dispatch.index') }}">Dispatches</a>
             <a class="dropdown-item" href="{{ url_for('driver.index') }}">Drivers</a>
             <a class="dropdown-item" href="{{ url_for('broker.index') }}">Brokers</a>
@@ -35,7 +36,7 @@
           @click="toggleDropdown('invoice')"
           @blur="closeDropdown('invoice')">
             <span>Invoicing</span>
-            <span class="dropdown-arrow" :class="{ open: openDropdown === 'invoice' }">▼</span>
+            <span class="dropdown-arrow" :class="{ open: openDropdown === 'invoice' }">⌵</span>
           </button>
           <div v-if="openDropdown === 'invoice'" class="dropdown-menu">
             <a class="dropdown-item" href="#">Completed</a>
@@ -63,6 +64,7 @@
       <h2>Nopalli ©</h2>
     </div>
   </footer>
+  
   {% include '_vue_cdn.html' %}
   <script>
     createApp({

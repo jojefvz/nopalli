@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Flask
 
 from src.infrastructure.configuration.container import Application
@@ -24,5 +26,9 @@ def create_web_app(app_container: Application) -> Flask:
 
     from .routes.location import bp as location_bp
     flask_app.register_blueprint(location_bp)
+
+    @flask_app.context_processor
+    def inject_today():
+        return {'today': date.today().isoformat()}
 
     return flask_app

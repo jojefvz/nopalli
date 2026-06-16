@@ -1,450 +1,546 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nopalli</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/containers.css') }}">
-</head>
-<body>
-  <header>
-    <h1>Editing Dispatch</h1>
-    <a href="{{ url_for('dispatch.index') }}">Return to Dispatches</a>
-  </header>
-  
-  <main class="container" data-page="edit-dispatch">
-    <form :action="`/dispatches/${dispatch.id}/edit`" method="post">
-      <div class="form-field">
-        <label for="broker_search">Broker</label>
-        <div class="dropdown">
-          <input 
-          type="text" 
-          id="broker_search" 
-          v-model="brokerSearch"
-          @focus="showBrokerDropdown = true"
-          @blur="hideBrokerDropdown"
-          @input="selectedBrokerId = ''"
-          minlength="2"
-          maxlength="100"
-          autocomplete="off"
-          required>
-          <div v-if="showBrokerDropdown && filteredBrokers.length > 0" class="dropdown-list">
-            <div 
-              v-for="broker in filteredBrokers" 
-              :key="broker.id"
-              @mousedown="selectBroker(broker)"
-              class="dropdown-option">
-              [[ broker.name ]]
-            </div>
-          </div>
-        </div>
-        <input type="hidden" name="broker_id" :value="selectedBrokerId">
-      </div>
-      <div class="form-field">
-        <label for="driver_search">Driver</label>
-        <div class="dropdown">
-          <input 
-          type="text" 
-          id="driver_search" 
-          v-model="driverSearch"
-          @focus="showDriverDropdown = true"
-          @blur="hideDriverDropdown"
-          @input="selectedDriverId = ''"
-          minlength="2"
-          maxlength="100"
-          autocomplete="off">
-          <div v-if="showDriverDropdown && filteredDrivers.length > 0" class="dropdown-list">
-            <div 
-              v-for="driver in filteredDrivers" 
-              :key="driver.id"
-              @mousedown="selectDriver(driver)"
-              class="dropdown-option">
-                [[ driver.nickname || (driver.first_name + ' ' + driver.last_name) ]]
-            </div>
-          </div>
-        </div>
-        <input type="hidden" name="driver_id" :value="selectedDriverId">
-      </div>
-      <div class="containers-section">
-        <h3>Containers</h3>
-        <div class="containers-area">
-          <div v-for="(container, index) in containerNumbers" 
-          :key="index" 
-          class="container-item"
-          style="margin-top: .5em">
-            <div class="container-item-header">
-              <h4>Container [[ index + 1 ]]</h4>
-              <button 
-              v-if="containerNumbers.length > 1"
-              type="button" 
-              @click="removeContainer(index)"
-              class="btn-remove">×</button>
-            </div>
-            <div class="container-item-fields">
-              <div class="form-field">
-                <label :for="'container_number_' + index">Number</label>
-                <input 
-                type="text" 
-                v-model="container.number"
-                :name="'container_number_' + index"
-                placeholder="Enter container number"
-                required>
-              </div>
-              <div class="form-field">
-                <label :for="'container_size_' + index">Size</label>
-                <select :name="'container_size_' + index" v-model="container.size" required>
-                  <option value="">Select container size</option>
-                  <option value="twenty_standard">20FT Standard</option>
-                  <option value="twenty_highcube">20FT HC</option>
-                  <option value="forty_standard">40FT Standard</option>
-                  <option value="forty_highcube">40FT HC</option>
-                  <option value="forty_five">45FT</option>
-                  <option value="fifty_three">53FT</option>
-                </select>
+{% extends "base.html" %}
+
+{% block main_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dispatches/dispatches.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="container" data-page="edit-dispatch">
+  <div class="slab-container" style="align-items: center; margin: 0;">
+    <span class="line-box">Edit Dispatch</span>
+    <a class="btn" style="text-decoration: none;" href="{{ url_for('dispatch.index') }}">Return to Dispatches</a>
+  </div>
+  <form :action="`/dispatches/${dispatch.id}/edit`" method="post">
+    <div class="large-form-section first-section">
+      <div class="large-form-starting-details">
+        <h3>Initial Details</h3>
+        <div class="form-field">
+          <label for="broker_search">Broker</label>
+          <div class="dropdown">
+            <input 
+            type="text" 
+            id="broker_search" 
+            v-model="brokerSearch"
+            @focus="showBrokerDropdown = true"
+            @blur="hideBrokerDropdown"
+            @input="selectedBrokerId = ''"
+            minlength="2"
+            maxlength="100"
+            autocomplete="off"
+            required>
+            <div v-if="showBrokerDropdown && filteredBrokers.length > 0" class="dropdown-list">
+              <div 
+                v-for="broker in filteredBrokers" 
+                :key="broker.id"
+                @mousedown="selectBroker(broker)"
+                class="dropdown-option">
+                [[ broker.name ]]
               </div>
             </div>
           </div>
+          <input type="hidden" name="broker_id" :value="selectedBrokerId">
         </div>
-        <button 
-        type="button" 
-        @click="addContainer"
-        class="btn-add">+ Add Container</button>
-      </div>
-      
-      <div class="stops-section">
-        <h3>Stops</h3>
-        <div class="stops-area">
-          <div v-for="(stop, stopIndex) in stops" :key="stopIndex" class="stop-container">
-            <div class="stop-header">
-              <h4>Stop [[ stopIndex + 1 ]]</h4>
-              <button 
-              v-if="stops.length > 2"
-              type="button" 
-              @click="removeStop(stopIndex)"
-              class="btn-remove">×</button>
-            </div>
-
-            <input type="hidden" :name="'task_priority_' + stopIndex" :value="stopIndex + 1">
-
-            <div class="form-field">
-              <label :for="'location_search_' + stopIndex">Location</label>
-              <div class="dropdown">
-                <input 
-                  type="text" 
-                  :id="'location_search_' + stopIndex"
-                  v-model="stop.locationSearch"
-                  @focus="stop.showLocationDropdown = true"
-                  @blur="hideLocationDropdown(stopIndex)"
-                  minlength="2"
-                  maxlength="100"
-                  autocomplete="off"
-                  required>
-                <div v-if="stop.showLocationDropdown && getFilteredLocations(stopIndex).length > 0" class="dropdown-list">
-                  <div 
-                    v-for="location in getFilteredLocations(stopIndex)" 
-                    :key="location.id"
-                    @mousedown="selectLocation(stopIndex, location)"
-                    class="dropdown-option">
-                    [[ location.name ]]
-                  </div>
-                </div>
-                <input type="hidden" :name="'task_location_id_' + stopIndex" :value="stop.selectedLocationId">
+        <div class="form-field">
+          <label for="driver_search">Driver</label>
+          <div class="dropdown">
+            <input 
+            type="text" 
+            id="driver_search" 
+            v-model="driverSearch"
+            @focus="showDriverDropdown = true"
+            @blur="hideDriverDropdown"
+            @input="selectedDriverId = ''"
+            minlength="2"
+            maxlength="100"
+            autocomplete="off">
+            <div v-if="showDriverDropdown && filteredDrivers.length > 0" class="dropdown-list">
+              <div 
+                v-for="driver in filteredDrivers" 
+                :key="driver.id"
+                @mousedown="selectDriver(driver)"
+                class="dropdown-option">
+                  [[ driver.nickname || (driver.first_name + ' ' + driver.last_name) ]]
               </div>
             </div>
-
-            <div class="form-field">
-              <label>Instruction</label>
-              <select 
-              :name="'task_instruction_' + stopIndex" 
-              v-model="stop.instruction"
-              required>
-                <option value="">Select an instruction</option>
-                <option value="fetch_chassis">Fetch Chassis</option>
-                <option value="prepull">Prepull</option>
-                <option value="bobtail_to">Bobtail To</option>
-                <option value="pickup_empty">Pickup Empty</option>
-                <option value="drop_empty">Drop Empty</option>
-                <option value="live_load">Live Load</option>
-                <option value="pickup_loaded">Pickup Loaded</option>
-                <option value="drop_loaded">Drop Loaded</option>
-                <option value="live_unload">Live Unload</option>
-                <option value="terminate_empty">Terminate Empty</option>
-                <option value="terminate_chassis">Terminate Chassis</option>
-                <option value="ingate">Ingate</option>
-                <option value="yard_pull">Yard Pull</option>
-                <option value="street_turn">Street Turn</option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Select Container</label>
-              <select :name="'task_container_' + stopIndex" v-model="stop.selectedContainer">
-                <option value="">None</option>
-                <option 
-                  v-for="(container, index) in filledContainers" 
-                  :key="index" 
-                  :value="container.number">
-                  [[ container.number ]]
-                </option>
-              </select>
-            </div>
-
-            <div class="form-field">
-              <label>Date</label>
+          </div>
+          <input type="hidden" name="driver_id" :value="selectedDriverId">
+        </div>
+      </div>
+      <div class="large-form-references">
+        <h3>References</h3>
+        <div class="form-field">
+          <label>Reference No.</label>
+          <input type="text" placeholder="Enter reference no.">
+        </div>
+        <div class="form-field">
+          <label>Customer No.</label>
+          <input type="text" placeholder="Enter reference no.">
+        </div>
+        <div class="form-field">
+          <label>P.O. No.</label>
+          <input type="text" placeholder="Enter reference no.">
+        </div>
+        <div class="form-field">
+          <label>RV No.</label>
+          <input type="text" placeholder="Enter reference no.">
+        </div>
+        <div class="form-field">
+          <label>Booking No.</label>
+          <input type="text" placeholder="Enter reference no.">
+        </div>
+        <div class="form-field">
+          <label>Pickup No.</label>
+          <input type="text" placeholder="Enter reference no.">
+        </div>
+      </div>
+    </div>
+    <div class="large-form-section">
+      <h3>Containers</h3>
+      <div class="slab-area" data-marker="container-area">
+        <div v-for="(container, index) in containerNumbers" 
+        :key="index" 
+        class="slab-container"
+        data-marker="container"
+        style="margin-top: .5em">
+          <div class="slab-header">
+            <h4>Container [[ index + 1 ]]</h4>
+            <button 
+            v-if="containerNumbers.length > 1"
+            type="button" 
+            @click="removeContainer(index)"
+            class="btn-remove">×</button>
+          </div>
+          <div class="form-field">
+            <label :for="'container_number_' + index">Number</label>
+            <input 
+            type="text" 
+            v-model="container.number"
+            :name="'container_number_' + index"
+            placeholder="Enter container number"
+            required>
+          </div>
+          <div class="form-field">
+            <label :for="'container_size_' + index">Size</label>
+            <select :name="'container_size_' + index" v-model="container.size" required>
+              <option value="">Select container size</option>
+              <option value="twenty_standard">20FT Standard</option>
+              <option value="twenty_highcube">20FT HC</option>
+              <option value="forty_standard">40FT Standard</option>
+              <option value="forty_highcube">40FT HC</option>
+              <option value="forty_five">45FT</option>
+              <option value="fifty_three">53FT</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label :for="'container_steamship_' + index">Steamship Line</label>
+            <select>
+              <option value="">Select container size</option>
+              <option value="">None</option>
+              <option value="">MSC</option>
+              <option value="">CMA</option>
+              <option value="">Matson</option>
+              <option value="">Crowley</option>
+              <option value="">Cosco</option>
+              <option value="">Hapag-Lloyd</option>
+              <option value="">ONE</option>
+              <option value="">Evergreen</option>
+              <option value="">HMM</option>
+              <option value="">Yang Ming</option>
+              <option value="">Other</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label :for="'container_chassis_' + index">Chassis</label>
+            <input 
+            type="text" 
+            placeholder="Enter chassis number">
+          </div>
+          <div class="form-field">
+            <label :for="'container_seal_' + index">Seal Number</label>
+            <input 
+            type="text" 
+            placeholder="Enter seal number">
+          </div>
+          <div class="form-field">
+            <label :for="'container_weight_' + index">Weight</label>
+            <input 
+            type="text" 
+            placeholder="Enter weight">
+          </div>
+          <div class="form-field">
+            <label :for="'container_temperature_' + index">Temperature</label>
+            <input 
+            type="text" 
+            placeholder="Enter temperature">
+          </div>
+          <div class="form-field">
+            <label :for="'container_goods_' + index">Goods Description</label>
+            <textarea rows="5" placeholder="Enter container goods" style="resize: none;"></textarea>
+          </div>
+        </div>
+      </div>
+      <button
+      style="margin-left: 90%;"
+      type="button" 
+      @click="addContainer"
+      class="btn-add">+ Add Container</button>
+    </div>
+    <div class="large-form-section">
+      <h3>Tasks</h3>
+      <div class="slab-area" data-marker="task-area">
+        <div v-for="(task, taskIndex) in tasks"
+        :key="taskIndex"
+        data-marker="task"
+        class="slab-container">
+          <div class="slab-header">
+            <h4>Task [[ taskIndex + 1 ]]</h4>
+            <button 
+            v-if="tasks.length > 2"
+            type="button" 
+            @click="removeTask(taskIndex)"
+            class="btn-remove">×</button>
+          </div>
+          <input type="hidden" :name="'task_priority_' + taskIndex" :value="taskIndex + 1">
+          <div class="form-field">
+            <label :for="'location_search_' + taskIndex">Location</label>
+            <div class="dropdown">
               <input 
-              type="date" 
-              :name="'task_date_' + stopIndex" 
-              v-model="stop.date"
-              required>
-            </div>
-
-            <div class="form-field">
-              <label>Appointment Type</label>
-              <select :name="'task_appointment_type_' + stopIndex" v-model="stop.appointment_type">
-                <option value="">None</option>
-                <option value="open">Open Appointment</option>
-                <option value="exact_time">Exact Time</option>
-                <option value="time_window">Time Window</option>
-                <option value="ready_after">Ready After</option>
-                <option value="finish_by">Finish By</option>
-              </select>
-            </div>
-
-            <div class="form-field" v-if="showStartTime(stopIndex)">
-              <label>Start Time</label>
-              <input type="time" :name="'task_appt_start_time_' + stopIndex" v-model="stop.start_time">
-              <input type="hidden" name="" id="">
-            </div>
-
-            <div class="form-field" v-if="showEndTime(stopIndex)">
-              <label>End Time</label>
-              <input type="time" :name="'task_appt_end_time_' + stopIndex" v-model="stop.end_time">
+                type="text" 
+                :id="'location_search_' + taskIndex"
+                v-model="task.locationSearch"
+                @focus="task.showLocationDropdown = true"
+                @blur="hideLocationDropdown(taskIndex)"
+                minlength="2"
+                maxlength="100"
+                autocomplete="off"
+                required>
+              <div v-if="task.showLocationDropdown && getFilteredLocations(taskIndex).length > 0" class="dropdown-list">
+                <div 
+                  v-for="location in getFilteredLocations(taskIndex)" 
+                  :key="location.id"
+                  @mousedown="selectLocation(taskIndex, location)"
+                  class="dropdown-option">
+                  [[ location.name ]]
+                </div>
+              </div>
+              <input type="hidden" :name="'task_location_id_' + taskIndex" :value="task.selectedLocationId">
             </div>
           </div>
+          <div class="form-field">
+            <label>Instruction</label>
+            <select 
+            :name="'task_instruction_' + taskIndex" 
+            v-model="task.instruction"
+            required>
+              <option value="">Select an instruction</option>
+              <option value="fetch_chassis">Fetch Chassis</option>
+              <option value="prepull">Prepull</option>
+              <option value="bobtail_to">Bobtail To</option>
+              <option value="pickup_empty">Pickup Empty</option>
+              <option value="drop_empty">Drop Empty</option>
+              <option value="live_load">Live Load</option>
+              <option value="pickup_loaded">Pickup Loaded</option>
+              <option value="drop_loaded">Drop Loaded</option>
+              <option value="live_unload">Live Unload</option>
+              <option value="terminate_empty">Terminate Empty</option>
+              <option value="terminate_chassis">Terminate Chassis</option>
+              <option value="ingate">Ingate</option>
+              <option value="yard_pull">Yard Pull</option>
+              <option value="street_turn">Street Turn</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Select Container</label>
+            <select :name="'task_container_' + taskIndex" v-model="task.selectedContainer">
+              <option value="">None</option>
+              <option 
+                v-for="(container, index) in filledContainers" 
+                :key="index" 
+                :value="container.number">
+                [[ container.number ]]
+              </option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Date</label>
+            <input 
+            type="date" 
+            :name="'task_date_' + taskIndex" 
+            v-model="task.date"
+            required>
+          </div>
+          <div class="form-field">
+            <label>Appointment Type</label>
+            <select :name="'task_appointment_type_' + taskIndex" v-model="task.appointmentType">
+              <option value="">None</option>
+              <option value="open">Open Appointment</option>
+              <option value="exact_time">Exact Time</option>
+              <option value="time_window">Time Window</option>
+              <option value="ready_after">Ready After</option>
+              <option value="finish_by">Finish By</option>
+            </select>
+          </div>
+          <div class="form-field" style="flex-direction: row; justify-content: space-between;">
+            <span :style="{ visibility: showStartTime(taskIndex) ? 'visible' : 'hidden' }" >
+              <label>Start Time</label>
+              <input type="time" :name="'task_appt_start_time_' + taskIndex" v-model="task.startTime">
+            </span>
+            <span :style="{ visibility: showEndTime(taskIndex) ? 'visible' : 'hidden' }">
+              <label>End Time</label>
+              <input type="time" :name="'task_appt_end_time_' + taskIndex" v-model="task.endTime">
+            </span>
+          </div>
         </div>
-
-        <button 
-          type="button" 
-          @click="addStop"
-          class="btn-add">+ Add Stop</button>
-      </div>          
-      <div class="form-field">
-        <button type="submit">Submit</button>
       </div>
-    </form>
-  </main>
-  {% include '_vue_cdn.html' %}
-  <script> 
-    createApp({
-      delimiters: ['[[', ']]'],
-      data() {
-        return {
-          dispatch: {
-              id: "{{ dispatch.id }}",
-              reference: "{{ dispatch.reference }}",
-            },
+      <button 
+      type="button" 
+      @click="addTask"
+      class="btn-add"
+      style="margin-left: 92%;">+ Add Task</button>
+    </div>
+    <div class="large-form-section">
+      <h3>Route Summary</h3>
+      <div class="route-timeline">
+        <div v-for="(stop, index) in routeLocations" :key="index" class="route-stop">
+          <div class="route-stop-indicator">
+            <div class="route-stop-node"></div>
+            <div class="route-stop-line" v-if="index < tasks.length - 1"></div>
+          </div>
+          <div class="route-stop-details">
+            <span class="route-stop-number">Stop [[ index + 1 ]]</span>
+            <span class="route-stop-location">[[ stop.locationSearch || 'TBD' ]]</span>
+            <span class="route-stop-instruction">[[ stop.instruction ? formatInstruction(stop.instruction) : '' ]]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button
+    class="large-form-submit"
+    type="submit">Submit</button>
+  </form>
+</main>
+{% endblock %}
+{% block scripts %}
+<script> 
+  createApp({
+    delimiters: ['[[', ']]'],
+    data() {
+      return {
+        dispatch: {
+            id: "{{ dispatch.id }}",
+            reference: "{{ dispatch.reference }}",
+          },
+        
+        // brokers
+        brokerSearch: '{{ dispatch.broker_name }}',
+        selectedBrokerId: "{{ dispatch.broker_id }}",
+        showBrokerDropdown: false,
+        brokers: [],
+        loadingBrokers: false,
           
-          // brokers
-          brokerSearch: '{{ dispatch.broker_name }}',
-          selectedBrokerId: "{{ dispatch.broker_id }}",
-          showBrokerDropdown: false,
-          brokers: [],
-          loadingBrokers: false,
-            
-          // drivers
-          driverSearch: '{{ dispatch.current_driver_name if dispatch.current_driver_name else "" }}',
-          selectedDriverId: '{{ dispatch.current_driver_id }}',
-          showDriverDropdown: false,
-          drivers: [],
-          loadingDrivers: false,
+        // drivers
+        driverSearch: '{{ dispatch.current_driver_name if dispatch.current_driver_name else "" }}',
+        selectedDriverId: '{{ dispatch.current_driver_id }}',
+        showDriverDropdown: false,
+        drivers: [],
+        loadingDrivers: false,
 
-          // containers
-          containerNumbers: {{ dispatch.containers|tojson }},
+        // containers
+        containerNumbers: {{ dispatch.containers|tojson }},
 
-          locations: [],
-          loadingLocations: false,
+        locations: [],
+        loadingLocations: false,
 
-          // stops
-          stops: [
-          {% for task in dispatch.plan %}
-            {
-              locationSearch: {{ task.location_name|tojson }},
-              selectedLocationId: {{ task.location_id|tojson }},
-              showLocationDropdown: false,
-              instruction: {{ task.instruction|tojson }},
-              selectedContainer: {{ task.container_number|tojson }},
-              date: {{ task.date|tojson }},
-              appointment_type: {{ task.appointment_type|tojson }},  // Note: using appointment_type
-              start_time: {{ task.start_time|tojson }},  // Note: using start_time
-              end_time: {{ task.end_time|tojson }}  // Note: using end_time
-            }{{ "," if not loop.last }}
-          {% endfor %}
-        ]
-        }
-      },
-      computed: {
-        filteredBrokers() {
-          if (!this.brokerSearch) return this.brokers;
-
-          const search = this.brokerSearch.toLowerCase();
-          return this.brokers.filter(broker => 
-            broker.name.toLowerCase().includes(search)
-          )
-        },
-        filteredDrivers() {
-          if (!this.driverSearch) return this.drivers;
-
-          const search = this.driverSearch.toLowerCase();
-          return this.drivers.filter(driver => {
-              const firstName = (driver.first_name || '').toLowerCase();
-              const lastName = (driver.last_name || '').toLowerCase();
-              const fullName = `${firstName} ${lastName}`;
-
-              if (driver.nickname) {
-                return driver.nickname.toLowerCase().includes(search);
-              }
-              
-              // Check first name, last name, or full name
-              return firstName.includes(search) || 
-                            lastName.includes(search) || 
-                            fullName.includes(search);
-            }
-          )
-        },
-        filledContainers() {
-          return this.containerNumbers.filter(container => container.number && container.size);
-        }
-      },
-      mounted() {
-        this.fetchBrokers();
-        this.fetchDrivers();
-        this.fetchLocations();
-      },
-      methods: {
-        async fetchBrokers() {
-          this.loadingBrokers = true;
-          try {
-            const response = await fetch('{{ url_for("broker.get_active_brokers") }}');
-            const data = await response.json();
-            this.brokers = data;
-          } catch (error) {
-            console.error('Error fetching brokers:', error);
-          } finally {
-            this.loadingBrokers = false;
-          }
-        },
-        selectBroker(broker) {
-          this.brokerSearch = broker.name;
-          this.selectedBrokerId = broker.id;
-          this.showBrokerDropdown = false;
-        },
-        hideBrokerDropdown() {
-          setTimeout(() => {
-            this.showBrokerDropdown = false;
-          }, 200);
-        },
-        async fetchDrivers() {
-          this.loadingDrivers = true;
-          try {
-            const response = await fetch('{{ url_for("driver.get_available_and_operating") }}');
-            const data = await response.json();
-            this.drivers = data;
-          } catch (error) {
-            console.error('Error fetching drivers:', error);
-          } finally {
-            this.loadingDrivers = false;
-          }
-        },
-        selectDriver(driver) {
-          this.driverSearch = driver.nickname || (driver.first_name + ' ' + driver.last_name);
-          this.selectedDriverId = driver.id;
-          this.showDriverDropdown = false;
-        },
-        hideDriverDropdown() {
-          setTimeout(() => {
-            this.showDriverDropdown = false;
-          }, 200);
-        },
-        createEmptyContainer() {
-          return {
-            number: '',
-            size: '',
-          };
-        },
-        addContainer() {
-          this.containerNumbers.push(this.createEmptyContainer());
-        },
-        removeContainer(index) {
-          if (this.containerNumbers.length > 1) {
-            this.containerNumbers.splice(index, 1);
-          }
-        },
-        createEmptyStop() {
-          return {
-            locationSearch: '',
-            selectedLocationId: '',
+        // tasks
+        tasks: [
+        {% for task in dispatch.plan %}
+          {
+            locationSearch: {{ task.location_name|tojson }},
+            selectedLocationId: {{ task.location_id|tojson }},
             showLocationDropdown: false,
-            instruction: '',
-            selectedContainer: '',
-            date: '',
-            appointmentType: '',
-            startTime: '',
-            endTime: ''
-          };
-        },
-        async fetchLocations() {
-          this.loadingLocations = true;
-          try {
-            const response = await fetch('{{ url_for("location.get_active_locations") }}');
-            const data = await response.json();
-            this.locations = data;
-          } catch (error) {
-            console.error('Error fetching locations:', error);
-          } finally {
-            this.loadingLocations = false;
-          }
-        },
-        getFilteredLocations(stopIndex) {
-          const stop = this.stops[stopIndex];
-          if (!stop.locationSearch) return this.locations;
-          
-          const search = stop.locationSearch.toLowerCase();
-          return this.locations.filter(location => 
-            location.name.toLowerCase().includes(search)
-          );
-        },
-        selectLocation(stopIndex, location) {
-          this.stops[stopIndex].locationSearch = location.name;
-          this.stops[stopIndex].selectedLocationId = location.id;
-          this.stops[stopIndex].showLocationDropdown = false;
-        },
-        hideLocationDropdown(stopIndex) {
-          setTimeout(() => {
-            this.stops[stopIndex].showLocationDropdown = false;
-          }, 200);
-        },
-        addStop() {
-          this.stops.push(this.createEmptyStop());
-        },
-        removeStop(index) {
-          if (this.stops.length > 2) {
-            this.stops.splice(index, 1);
-          }
-        },
-        showStartTime(stopIndex) {
-          const appointmentType = this.stops[stopIndex].appointment_type;
-          return ['exact_time', 'time_window', 'ready_after', 'finish_by'].includes(appointmentType);
-        },
-        showEndTime(stopIndex) {
-          return this.stops[stopIndex].appointment_type === 'time_window';
-        },
+            instruction: {{ task.instruction|tojson }},
+            selectedContainer: {{ task.container_number|tojson }},
+            date: {{ task.date|tojson }},
+            appointmentType: {{ task.appointment_type|tojson }},
+            startTime: {{ task.start_time|tojson }},
+            endTime: {{ task.end_time|tojson }}
+          }{{ "," if not loop.last }}
+        {% endfor %}
+      ]
       }
-    }).mount('[data-page="edit-dispatch"]');
-  </script>
-</body>
-</html>
+    },
+    computed: {
+      filteredBrokers() {
+        if (!this.brokerSearch) return this.brokers;
 
+        const search = this.brokerSearch.toLowerCase();
+        return this.brokers.filter(broker => 
+          broker.name.toLowerCase().includes(search)
+        )
+      },
+      filteredDrivers() {
+        if (!this.driverSearch) return this.drivers;
 
+        const search = this.driverSearch.toLowerCase();
+        return this.drivers.filter(driver => {
+            const firstName = (driver.first_name || '').toLowerCase();
+            const lastName = (driver.last_name || '').toLowerCase();
+            const fullName = `${firstName} ${lastName}`;
 
+            if (driver.nickname) {
+              return driver.nickname.toLowerCase().includes(search);
+            }
+            
+            // Check first name, last name, or full name
+            return firstName.includes(search) || 
+                          lastName.includes(search) || 
+                          fullName.includes(search);
+          }
+        )
+      },
+      filledContainers() {
+        return this.containerNumbers.filter(container => container.number && container.size);
+      },
+      routeLocations() {
+        return this.tasks.reduce((acc, task, index) => {
+          const location = task.locationSearch || 'TBD';
+          const prev = acc[acc.length - 1];
+          if (!prev || prev.locationSearch !== location) {
+            acc.push({ ...task, taskNumber: index + 1 });
+          }
+          return acc;
+        }, []);
+      }
+    },
+    mounted() {
+      this.fetchBrokers();
+      this.fetchDrivers();
+      this.fetchLocations();
+    },
+    methods: {
+      async fetchBrokers() {
+        this.loadingBrokers = true;
+        try {
+          const response = await fetch('{{ url_for("broker.get_active_brokers") }}');
+          const data = await response.json();
+          this.brokers = data;
+        } catch (error) {
+          console.error('Error fetching brokers:', error);
+        } finally {
+          this.loadingBrokers = false;
+        }
+      },
+      selectBroker(broker) {
+        this.brokerSearch = broker.name;
+        this.selectedBrokerId = broker.id;
+        this.showBrokerDropdown = false;
+      },
+      hideBrokerDropdown() {
+        setTimeout(() => {
+          this.showBrokerDropdown = false;
+        }, 200);
+      },
+      async fetchDrivers() {
+        this.loadingDrivers = true;
+        try {
+          const response = await fetch('{{ url_for("driver.get_available_and_operating") }}');
+          const data = await response.json();
+          this.drivers = data;
+        } catch (error) {
+          console.error('Error fetching drivers:', error);
+        } finally {
+          this.loadingDrivers = false;
+        }
+      },
+      selectDriver(driver) {
+        this.driverSearch = driver.nickname || (driver.first_name + ' ' + driver.last_name);
+        this.selectedDriverId = driver.id;
+        this.showDriverDropdown = false;
+      },
+      hideDriverDropdown() {
+        setTimeout(() => {
+          this.showDriverDropdown = false;
+        }, 200);
+      },
+      createEmptyContainer() {
+        return {
+          number: '',
+          size: '',
+        };
+      },
+      addContainer() {
+        this.containerNumbers.push(this.createEmptyContainer());
+      },
+      removeContainer(index) {
+        if (this.containerNumbers.length > 1) {
+          this.containerNumbers.splice(index, 1);
+        }
+      },
+      createEmptyTask() {
+        return {
+          locationSearch: '',
+          selectedLocationId: '',
+          showLocationDropdown: false,
+          instruction: '',
+          selectedContainer: '',
+          date: '',
+          appointmentType: '',
+          startTime: '',
+          endTime: ''
+        };
+      },
+      async fetchLocations() {
+        this.loadingLocations = true;
+        try {
+          const response = await fetch('{{ url_for("location.get_active_locations") }}');
+          const data = await response.json();
+          this.locations = data;
+        } catch (error) {
+          console.error('Error fetching locations:', error);
+        } finally {
+          this.loadingLocations = false;
+        }
+      },
+      getFilteredLocations(taskIndex) {
+        const task = this.tasks[taskIndex];
+        if (!task.locationSearch) return this.locations;
+        
+        const search = task.locationSearch.toLowerCase();
+        return this.locations.filter(location => 
+          location.name.toLowerCase().includes(search)
+        );
+      },
+      selectLocation(taskIndex, location) {
+        this.tasks[taskIndex].locationSearch = location.name;
+        this.tasks[taskIndex].selectedLocationId = location.id;
+        this.tasks[taskIndex].showLocationDropdown = false;
+      },
+      hideLocationDropdown(taskIndex) {
+        setTimeout(() => {
+          this.tasks[taskIndex].showLocationDropdown = false;
+        }, 200);
+      },
+      addTask() {
+        this.tasks.push(this.createEmptyTask());
+      },
+      removeTask(index) {
+        if (this.tasks.length > 2) {
+          this.tasks.splice(index, 1);
+        }
+      },
+      showStartTime(taskIndex) {
+        const appointmentType = this.tasks[taskIndex].appointmentType;
+        return ['exact_time', 'time_window', 'ready_after', 'finish_by'].includes(appointmentType);
+      },
+      showEndTime(taskIndex) {
+        return this.tasks[taskIndex].appointmentType === 'time_window';
+      },
+      formatInstruction(instruction) {
+        if (!instruction) return '';
+        return instruction.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      }
+    }
+  }).mount('[data-page="edit-dispatch"]');
+</script>
+{% endblock %}

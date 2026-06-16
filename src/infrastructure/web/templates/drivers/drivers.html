@@ -3,14 +3,14 @@
 {% block main_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/containers.css') }}">
 {% endblock %}
 
 {% block content %}
 <main class="container" data-page="drivers">
-  <div class="container-header">
-    <h2>Drivers</h2>
+  <div class="slab-container">
+    <span class="line-box">Drivers</span>
     <button 
+    style="margin: 0;"
     type="button" 
     class="btn"
     @click="newDriverModal = true">New Driver</button>
@@ -68,21 +68,26 @@
   
   <!-- Driver List -->
   <div class="container-content">
-    <div v-for="driver in drivers" :key="driver.id" class="object-container">
-      <div class="object-header">
-        <h3>[[ driver.first_name ]] [[ driver.last_name ]] ([[ driver.status ]])</h3>
-        <h4>Nickname: [[ driver.nickname ]]</h4>
-        <button @click="openEditModal(driver)">Edit</button>
+    <div v-for="driver in drivers" :key="driver.id" class="slab-container">
+      <div class="slab-left">
+        <span class="slab-title">[[ driver.first_name ]] [[ driver.last_name ]]</span>
+        <span class="status-badge" :class="`status-badge-${driver.status.toLowerCase()}`">
+          [[ driver.status ]]
+        </span>
+        <div>
+          Nickname: [[ driver.nickname ]]
+        </div>
+        <button class="btn-card" @click="openEditModal(driver)">Edit</button>
       </div>
-      <div class="object-body">
+      <div class="slab-right">
         <div 
         v-if="['Available','Unavailable'].includes(driver.status)" 
         type="button" 
         class="status-btns-container">
-          <button @click="openAvailableModal(driver)">
+          <button class="btn-card" @click="openAvailableModal(driver)">
             [[ driver.status === 'Available' ? 'Sit Out' : 'Make Available']]
           </button>
-          <button @click="openActivateModal(driver)">Deactivate</button>
+          <button class="btn-card" @click="openActivateModal(driver)">Deactivate</button>
         </div>
         <button v-else-if="driver.status === 'Deactivated'" type="button" @click="openActivateModal(driver)">
           Activate
@@ -127,7 +132,7 @@
               :value="selectedDriver.nickname">
           </div>
           <div class="form-field">
-            <button type="submit" class="modal-submit">Submit</button>
+            <button type="submit" class="btn-card">Submit</button>
           </div>
         </form>
       </div>
@@ -154,11 +159,11 @@
             Are you sure you would like to activate this driver?
             Driver will be available for driver selection.
           </p>
-          <p>
-            <button type="submit">
+          <div class="form-field">
+            <button class="btn-card" type="submit">
               [[ ['Available', 'Unavailable'].includes(selectedDriver.status) ? 'Deactivate' : 'Activate' ]]
             </button>
-          </p>
+          </div>
         </form>
       </div>
     </div>
@@ -184,11 +189,11 @@
             Are you sure you would like to make this driver available?
             Driver will be available for driver selection.
           </p>
-          <p>
-            <button type="submit">
+          <div class="form-field">
+            <button class="btn-card" type="submit">
               [[ selectedDriver.status === 'Available' ? 'Sit Out' : 'Make Avaiable' ]]
             </button>
-          </p>
+          </div>
         </form>
       </div>
     </div>

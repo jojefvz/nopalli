@@ -11,10 +11,14 @@ from src.application.use_cases.broker_use_cases import (
 )
 from src.application.use_cases.dispatch_use_cases import (
     CreateDispatchUseCase,
+    GetLoadboardDispatchesUseCase,
     ListDispatchesUseCase,
     GetDispatchUseCase,
     EditDispatchUseCase,
-    StartDispatchUseCase
+    StartDispatchUseCase,
+    StartTaskUseCase,
+    RevertTaskUseCase,
+    CompleteTaskUseCase,
 )
 from src.application.use_cases.driver_use_cases import (
     ListDriversUseCase,
@@ -152,6 +156,18 @@ class Application:
         self.start_dispatch_use_case = StartDispatchUseCase(
             self.dispatch_repository
         )
+        self.get_loadboard_use_case = GetLoadboardDispatchesUseCase(
+            self.dispatch_repository
+        )
+        self.start_task_use_case = StartTaskUseCase(
+            self.dispatch_repository
+        )
+        self.revert_task_use_case = RevertTaskUseCase(
+            self.dispatch_repository
+        )
+        self.complete_task_use_case = CompleteTaskUseCase(
+            self.dispatch_repository
+        )
 
         # configure location use cases
         self.list_locations_use_case = ListLocationsUseCase(self.location_repository)
@@ -182,6 +198,10 @@ class Application:
             self.get_dispatch_use_case,
             self.edit_dispatch_use_case,
             self.start_dispatch_use_case,
+            self.get_loadboard_use_case,
+            self.start_task_use_case,
+            self.revert_task_use_case,
+            self.complete_task_use_case,
             self.dispatch_presenter
             )
         

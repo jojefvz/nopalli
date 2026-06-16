@@ -3,14 +3,14 @@
 {% block main_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/modals.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/shared/components.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/shared/containers.css') }}">
 {% endblock %}
 
 {% block content %}
 <main class="container" data-page="locations">
-  <div class="container-header">
-    <h2>Locations</h2>
+  <div class="slab-container">
+    <span class="line-box">Locations</span>
     <button 
+    style="margin: 0;"
     type="button" 
     class="btn"
     @click="newLocationModal = true">New Location</button>
@@ -131,24 +131,28 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer"></div>
     </div>
   </div>
   
   <!-- Location List -->
   <div class="container-content">
-    <div v-for="location in locations" :key="location.id" class="object-container">
-      <div class="object-details">
-        <h3>[[ location.name ]] ([[ location.status ]])</h3>
-        <div class="location-address">
+    <div v-for="location in locations" :key="location.id" class="slab-container">
+      <div class="slab-left">
+        <span class="slab-title">[[ location.name ]]</span>
+        <span class="status-badge" :class="`status-badge-${location.status.toLowerCase()}`">
+          [[ location.status ]]
+        </span>
+        <div class="slab-address">
           [[ location.street_address ]]<br>
           [[ location.city ]], [[ location.state ]] [[ location.zipcode ]]
         </div>
-        <button @click="openEditModal(location)">Edit</button>
+        <button class="btn-card" @click="openEditModal(location)">Edit</button>
       </div>
-      <button type="button" @click="openActivateModal(location)">
-        [[ location.status === 'Active' ? 'Deactivate' : 'Activate' ]]
-      </button>
+      <div class="slab-right">
+        <button class="btn-card" type="button" @click="openActivateModal(location)">
+          [[ location.status === 'Active' ? 'Deactivate' : 'Activate' ]]
+        </button>
+      </div>
     </div>
   </div>
   
@@ -253,7 +257,7 @@
               required>
           </div>
           <div class="form-field">
-            <button type="submit" class="modal-submit">Submit</button>
+            <button type="submit" class="btn-card">Submit</button>
           </div>
         </form>
       </div>
@@ -279,11 +283,11 @@
             Location will be available for location selection.
           </p>
           <input type="hidden" name="id" :value="selectedLocation.id">
-          <p>
-            <button type="submit">
+          <div class="form-field">
+            <button class="btn-card" type="submit">
               [[ selectedLocation.status === 'Active' ? 'Deactivate' : 'Activate' ]]
             </button>
-          </p>
+          </div>
         </form>
       </div>
     </div>

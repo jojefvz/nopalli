@@ -1,122 +1,297 @@
-.container {
+.slab-left {
+  flex: 1 1 0;
+}
+.slab-middle {
+  flex: 4 1 0;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.slab-right {
+  flex: 1 1 0;
+}
+
+/* Dispatch Object Middle Stylings */
+
+.display-broker {
+  flex: 1 1 0;
+}
+
+.display-drivers {
+  margin: 0;
+  flex: 1 1 0;
+}
+
+.display-appts {
+  flex: 3 1 0;
+}
+
+.display-containers {
+  flex: 1 1 0;
+}
+
+
+/* Dispatch Object Right Stylings */
+
+.display-actions {
+  flex: .5 1 0;
+  display: flex;
+}
+
+.card-actions-menu {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  visibility: hidden;
+  border-radius: .5em;
+}
+
+.card-actions-menu.visible {
+  visibility: visible;
+  background-color: #dfdddd31;
+}
+
+.card-actions-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 1em;
+  padding: .4em;
+  margin: 0;
+  transition: transform .2s ease;
+}
+
+.card-actions-toggle.open {
+  transform: rotate(180deg);
+}
+
+.card-actions-item {
+  display: block;
+  width: 100%;
+  padding: .4em .5em;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: .85em;
+  color: #333;
+  text-decoration: none;
+  margin: 0;
+}
+
+.card-actions-item:hover {
   background-color: #f4f4f4;
-  padding-bottom: 1em;
-} .container-subheading {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-top: 1em;
-  } .container-subheading h2 {
-      margin-left: .8em;
-    } .container-subheading button {
-        font-family: Arial, Helvetica, sans-serif;
-        background-color: white;
-        box-shadow: .05em .05em 0.5em rgba(99, 99, 99, 0.2);
-        padding: 1em 1em;
-        margin-right: 1.2em;
-        border: none;
-        border-radius: .2em;
-      }
-      .form-broker {
-        position: relative;
-      } .form-broker .dropdown {
-          margin: 0;
-          border: 1px solid black;
-          background-color: white;
-          border-radius: 3px;
-          position: absolute;
-          width: 19%;
-          top: 1.3em;
-          left: 3.2em;
-          max-height: 7em;
-          overflow: auto;
-          z-index: 1;
-          }   .form-broker .dropdown div:hover {
-              background-color: rgb(213, 212, 212);
-              }   .form-broker .dropdown div {
-                  margin: 0;
-                  }
-      .form-driver {
-        position: relative;
-      } .form-driver .dropdown {
-          margin: 0;
-          border: 1px solid black;
-          background-color: white;
-          border-radius: 3px;
-          position: absolute;
-          width: 19.2%;
-          top: 1.3em;
-          left: 2.9em;
-          max-height: 7em;
-          overflow: auto;
-          z-index: 1;
-        }   .form-driver .dropdown div:hover {
-              background-color: rgb(213, 212, 212);
-            }   .form-driver .dropdown div {
-                  margin: 0;
-                }
-      .form-container {
-        margin: 0;
-      }
-      .form-task {
-        padding: 10px;
-        position: relative;
-        background-color: rgb(226, 242, 255);
-        width: 50%;
-        border-radius: 5px;
-      } .form-task h3 {
-          margin: 0;
-        }
-        .form-task-remove {
-          position: absolute;
-          top: .3em;
-          right: .3em;
-          padding: .3em;
-          cursor: pointer;
-          font-size: 2em;
-          height: 1em;
-          width: 1em;
-          text-indent: 10em;
-          overflow: hidden;
-          border: 0;
-          background: none;
-        } .form-task-remove::after {
-            position: absolute;
-            line-height: .5;
-            top: .2em;
-            left: .1em;
-            text-indent: 0;
-            content: '\00D7';
-          }
-        .form-location {
-          position: relative;
-        } .form-location .dropdown {
-            margin: 0;
-            border: 1px solid black;
-            background-color: white;
-            border-radius: 3px;
-            position: absolute;
-            width: 40.5%;
-            top: 1.3em;
-            left: 4.05em;
-            max-height: 7em;
-            overflow: auto;
-            z-index: 1;
-          } .form-location .dropdown div:hover {
-              background-color: rgb(213, 212, 212);
-            } .form-location .dropdown div {
-                margin: 0;
-              }
-        .form-appointment {
-          position: relative;
-        } div.appointment {
-            position: absolute;
-            margin: 0;
-            width: 100%;
-            padding-left: .5em;
-            padding-right: .11em;
-            padding-bottom: .5em;
-            background-color: rgb(237, 234, 234);
-            /* border: 1px solid black; */
-          }
-        
+}
+
+.card-actions-danger {
+  color: #c0392b;
+}
+
+.card-actions-danger:hover {
+  background-color: #fce8e8;
+}
+
+.large-form-section {
+  background-color: white;
+  border-radius: .5em;
+  box-shadow: .05em .05em 0.5em rgba(99, 99, 99, 0.2);
+  padding: 1em;
+}
+
+.first-section {
+  display: flex;
+  gap: 3em;
+}
+
+.first-section > * {
+  margin: 0;
+}
+
+.large-form-starting-details {
+  background-color: white;
+  border-radius: .5em;
+  box-shadow: .05em .05em 0.5em rgba(99, 99, 99, 0.2);
+  padding: 1em;
+}
+
+.large-form-starting-details > *:first-child {
+  margin-top: 0;
+  margin-bottom: 1.7em;
+}
+
+.large-form-starting-details > *:nth-child(2) {
+  margin-bottom: 2.2em;
+}
+
+.large-form-references {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: white;
+  border-radius: .5em;
+  box-shadow: .05em .05em 0.5em rgba(99, 99, 99, 0.2);
+  padding: 1em;
+  row-gap: 1em;
+  column-gap: 1em;
+}
+
+.large-form-references > * {
+  flex: 0 0 calc(33.333% - 0.67rem);
+  margin: 0;
+}
+
+.large-form-references > *:first-child {
+  flex: 0 0 100%;
+}
+
+.large-form-submit {
+  margin-left: 39%;
+  font-size: 1.3em;
+  font-weight: bold;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.116);
+  padding: 1em 5em;
+  border-radius: .5em;
+  cursor: pointer;
+}
+
+.slab-area {
+  display: flex;
+  column-gap: 1em;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  border: 1px solid rgba(0, 0, 0, 0.116);
+  border-radius: .5em;
+  padding: 1em;
+}
+
+.slab-area > * {
+  margin: 0;
+}
+
+.slab-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slab-header > * {
+  margin: 0;
+  margin-bottom: 1.5em;
+}
+
+[data-marker="container-area"] > * {
+  flex: 0 0 calc(33% - .5em);
+}
+
+[data-marker="container"] {
+  flex-wrap: wrap;
+}
+
+[data-marker="container"] > *:first-child {
+  flex: 0 0 100%;
+}
+
+[data-marker="container"] > * {
+  flex: 0 0 calc(50% - .5em);
+}
+
+
+[data-marker="task-area"] > * {
+  flex: 0 0 calc(25% - .5em);
+}
+
+[data-marker="task-area-modal"] > * {
+  flex: 0 0 calc(33% - .5em);
+}
+
+[data-marker="task"] {
+  display: flex;
+  flex-direction: column;
+}
+
+.start-task-btn {
+  border: 1px solid #ccc;
+  background: none;
+  padding: .3em .3em;
+  border-radius: .25em;
+  cursor: pointer;
+  color: #333;
+  text-decoration: none;
+}
+
+.start-task-btn:hover {
+  background-color: #f4f4f4;
+}
+
+.route-timeline {
+  display: flex;
+  flex-direction: column;
+  padding: .5em 1em;
+}
+
+.route-stop {
+  display: flex;
+  gap: 1em;
+  margin: 0;
+}
+
+.route-stop-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+}
+
+.route-stop-indicator > * {
+  margin: 0;
+}
+
+.route-stop-node {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #98d1ff;
+  border: 2px solid #5ab4f5;
+  flex-shrink: 0;
+  margin-top: .3em;
+}
+
+.route-stop-line {
+  width: 2px;
+  flex: 1;
+  background-color: #cce8ff;
+  min-height: 2em;
+}
+
+.route-stop-details {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 1.5em;
+  margin: 0;
+}
+
+.route-stop-details > * {
+  margin: 0;
+}
+
+.route-stop-number {
+  font-size: .75em;
+  color: #888;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.route-stop-location {
+  font-size: 1em;
+  font-weight: 600;
+  color: #222;
+}
+
+.route-stop-instruction {
+  font-size: .85em;
+  color: #555;
+}

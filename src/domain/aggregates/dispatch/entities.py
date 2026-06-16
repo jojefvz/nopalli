@@ -47,18 +47,19 @@ class Task(Entity):
         
         self._status = TaskStatus.IN_PROGRESS
         self._check_in_datetime = datetime.now()
+        
 
     def complete(self, driver: Driver) -> None:
         if self._status != TaskStatus.IN_PROGRESS:
             raise ValueError('Only tasks in progress can be completed.')
         
         self._status = TaskStatus.COMPLETED
-        self._completed_by = driver.name
+        self._completed_by = driver
         self._check_out_datetime = datetime.now()
 
     def stopoff(self, driver: Driver) -> None:
-        if self._status not in (TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS):
-            raise ValueError('Only tasks not started or in progress can be marked stopoff.')
+        if self._status != TaskStatus.IN_PROGRESS:
+            raise ValueError('Only tasks in progress can be marked stopoff.')
         
         if self.instruction in (
             Instruction.BOBTAIL_TO,
@@ -67,6 +68,15 @@ class Task(Entity):
             Instruction.STREET_TURN,
         ):
             raise ValueError('Task instruction is incompatible with being marked stop off.')
+        
+        self._status = TaskStatus.STOP_OFF
+        self._completed_by = driver.name
+        self._check_out_datetime = datetime.now()
+
+    def void(self, driver: Driver) -> None:
+        if self._status not in (TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS):
+            raise ValueError('Only tasks not started or in progress can be voided.')
+        
         
         self._status = TaskStatus.STOP_OFF
         self._completed_by = driver.name

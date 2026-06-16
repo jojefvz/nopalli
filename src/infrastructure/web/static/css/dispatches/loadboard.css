@@ -1,0 +1,14 @@
+.accordion {
+  margin-top: 0.2em;
+}
+
+.current-task-actions {
+  display: flex;
+  gap: .75em;
+  margin-bottom: 1em;
+  justify-content: center;
+}
+
+.current-task-actions form {
+  margin: 0;
+}
